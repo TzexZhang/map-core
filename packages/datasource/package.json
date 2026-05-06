@@ -1,0 +1,19 @@
+{
+  "name": "@mapcore/datasource",
+  "version": "1.0.0",
+  "description": "MapCore 数据源管理包 - HTTP/WebSocket/Mock 数据源统一管理",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@mapcore/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "license": "MIT"
+}

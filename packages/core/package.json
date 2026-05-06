@@ -1,0 +1,16 @@
+{
+  "name": "@mapcore/core",
+  "version": "1.0.0",
+  "description": "MapCore 核心包 - 纯接口与类型定义，零外部依赖",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "license": "MIT"
+}

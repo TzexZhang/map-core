@@ -1,0 +1,23 @@
+{
+  "name": "@mapcore/adapter-ol",
+  "version": "1.0.0",
+  "description": "MapCore OpenLayers 适配器 - 二维地图引擎实现",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@mapcore/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "ol": "^9.0.0"
+  },
+  "devDependencies": {
+    "ol": "^9.0.0",
+    "typescript": "^5.3.0"
+  },
+  "license": "MIT"
+}

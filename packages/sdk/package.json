@@ -1,0 +1,37 @@
+{
+  "name": "@mapcore/sdk",
+  "version": "1.0.0",
+  "description": "MapCore SDK 聚合包 - 统一入口，包含所有模块",
+  "main": "dist/mapcore.umd.js",
+  "module": "dist/mapcore.esm.js",
+  "types": "dist/types/index.d.ts",
+  "browser": "dist/mapcore.umd.js",
+  "scripts": {
+    "build": "tsc && rollup --configPlugin typescript -c rollup.config.ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@mapcore/core": "workspace:*",
+    "@mapcore/adapter-ol": "workspace:*",
+    "@mapcore/adapter-cesium": "workspace:*",
+    "@mapcore/datasource": "workspace:*",
+    "@mapcore/bridge": "workspace:*"
+  },
+  "peerDependencies": {
+    "ol": "^9.0.0",
+    "cesium": "^1.120.0"
+  },
+  "peerDependenciesMeta": {
+    "ol": { "optional": true },
+    "cesium": { "optional": true }
+  },
+  "devDependencies": {
+    "ol": "^9.0.0",
+    "cesium": "^1.120.0",
+    "typescript": "^5.3.0",
+    "rollup": "^4.9.0",
+    "@rollup/plugin-typescript": "^11.1.0",
+    "tslib": "^2.6.0"
+  },
+  "license": "MIT"
+}
