@@ -24,6 +24,7 @@ import type {
   GeoJSONFeature,
   LayerConfig,
   EventBus,
+  CoordinateSystem,
 } from '@mapcore/core';
 import {
   LayerType,
@@ -160,6 +161,33 @@ export class OLMapEngine implements IMapEngine {
   /** 是否已初始化 */
   private initialized: boolean = false;
 
+  /** 外部接口使用的坐标系 */
+  private coordinateSystem: CoordinateSystem = 'EPSG:4326';
+
+  /**
+   * 将外部坐标转换为 OL 内部坐标（EPSG:3857）
+   * - 如果外部使用 EPSG:4326 → 做 lngLatToMercator 转换
+   * - 如果外部使用 EPSG:3857 → 直接透传
+   */
+  private toInternal(coord: [number, number]): [number, number] {
+    if (this.coordinateSystem === 'EPSG:3857') {
+      return coord;
+    }
+    return lngLatToMercator(coord);
+  }
+
+  /**
+   * 将 OL 内部坐标（EPSG:3857）转换为外部坐标
+   * - 如果外部使用 EPSG:4326 → 做 mercatorToLngLat 转换
+   * - 如果外部使用 EPSG:3857 → 直接透传
+   */
+  private toExternal(coord: [number, number]): [number, number] {
+    if (this.coordinateSystem === 'EPSG:3857') {
+      return coord;
+    }
+    return mercatorToLngLat(coord);
+  }
+
   /**
    * 初始化 OpenLayers 引擎
    * @description 创建 OL Map 和 View 实例，挂载到 DOM 容器，
@@ -172,6 +200,9 @@ export class OLMapEngine implements IMapEngine {
   async init(container: HTMLElement, options: MapCoreOptions): Promise<void> {
     try {
       this.ol = await this.loadOL();
+      await this.injectCSS();
+
+      this.coordinateSystem = options.coordinateSystem ?? 'EPSG:4326';
 
       const viewOptions: Record<string, unknown> = {
         maxZoom: 22,
@@ -180,14 +211,13 @@ export class OLMapEngine implements IMapEngine {
 
       if (options.initialView) {
         const center = options.initialView.center;
-        const mercatorCenter = lngLatToMercator(center);
-        viewOptions.center = mercatorCenter;
+        viewOptions.center = this.toInternal(center as [number, number]);
         viewOptions.zoom = options.initialView.zoom ?? 4;
         if (options.initialView.rotation !== undefined) {
           viewOptions.rotation = options.initialView.rotation;
         }
       } else {
-        viewOptions.center = lngLatToMercator([116.397428, 39.90923]);
+        viewOptions.center = this.toInternal([116.397428, 39.90923]);
         viewOptions.zoom = 4;
       }
 
@@ -243,7 +273,7 @@ export class OLMapEngine implements IMapEngine {
     const view = this.olMap!.getView();
 
     if (state.center) {
-      view.setCenter(lngLatToMercator(state.center));
+      view.setCenter(this.toInternal(state.center as [number, number]));
     }
     if (state.zoom !== undefined) {
       view.setZoom(state.zoom);
@@ -261,12 +291,12 @@ export class OLMapEngine implements IMapEngine {
     this.assertReady('getView');
     const view = this.olMap!.getView();
     const center = view.getCenter();
-    const lngLat = center
-      ? mercatorToLngLat(center as [number, number])
+    const externalCenter = center
+      ? this.toExternal(center as [number, number])
       : ([0, 0] as [number, number]);
 
     return {
-      center: lngLat,
+      center: externalCenter,
       zoom: view.getZoom() ?? 4,
       rotation: view.getRotation(),
     };
@@ -279,7 +309,7 @@ export class OLMapEngine implements IMapEngine {
   async flyTo(options: FlyToOptions): Promise<void> {
     this.assertReady('flyTo');
     const view = this.olMap!.getView();
-    const center = lngLatToMercator([options.center[0], options.center[1]] as [number, number]);
+    const center = this.toInternal([options.center[0], options.center[1]] as [number, number]);
 
     return new Promise<void>((resolve) => {
       view.animate({
@@ -303,8 +333,8 @@ export class OLMapEngine implements IMapEngine {
     const size = this.olMap!.getSize() ?? [0, 0];
     const extent = view.calculateExtent(size) as [number, number, number, number];
 
-    const sw = mercatorToLngLat([extent[0], extent[1]]);
-    const ne = mercatorToLngLat([extent[2], extent[3]]);
+    const sw = this.toExternal([extent[0], extent[1]]);
+    const ne = this.toExternal([extent[2], extent[3]]);
 
     return {
       west: sw[0],
@@ -321,22 +351,22 @@ export class OLMapEngine implements IMapEngine {
    */
   project(lngLat: LngLat): PixelCoord | null {
     this.assertReady('project');
-    const mercator = lngLatToMercator(lngLat);
-    const pixel = this.olMap!.getPixelFromCoordinate(mercator);
+    const internal = this.toInternal(lngLat);
+    const pixel = this.olMap!.getPixelFromCoordinate(internal);
     if (!pixel) return null;
     return [pixel[0], pixel[1]] as PixelCoord;
   }
 
   /**
-   * 屏幕像素坐标 → 地理坐标
+   * 屏幕像素坐标 → 外部坐标
    * @param pixel - 像素坐标
-   * @returns 经纬度坐标
+   * @returns 外部坐标系下的坐标
    */
   unproject(pixel: PixelCoord): LngLat {
     this.assertReady('unproject');
     const mercator = this.olMap!.getCoordinateFromPixel(pixel) as [number, number];
     if (!mercator) return [0, 0] as LngLat;
-    return mercatorToLngLat(mercator);
+    return this.toExternal(mercator);
   }
 
   /**
@@ -525,10 +555,88 @@ export class OLMapEngine implements IMapEngine {
     }
 
     try {
-      const ol = await import('ol');
-      return ol as unknown as OLModule;
+      const [
+        { default: OLMap },
+        { default: OLView },
+        { default: TileLayer },
+        { default: VectorLayer },
+        { default: ImageLayer },
+        { default: HeatmapLayer },
+        { default: XYZSource },
+        { default: TileWMSSource },
+        { default: WMTSSource },
+        { default: VectorSource },
+        { default: ImageWMSSource },
+        { default: ClusterSource },
+        { default: GeoJSONFormat },
+        { default: PointGeom },
+        { default: OLFeature },
+        { fromLonLat, toLonLat, transformExtent },
+      ] = await Promise.all([
+        import('ol/Map'),
+        import('ol/View'),
+        import('ol/layer/Tile'),
+        import('ol/layer/Vector'),
+        import('ol/layer/Image'),
+        import('ol/layer/Heatmap'),
+        import('ol/source/XYZ'),
+        import('ol/source/TileWMS'),
+        import('ol/source/WMTS'),
+        import('ol/source/Vector'),
+        import('ol/source/ImageWMS'),
+        import('ol/source/Cluster'),
+        import('ol/format/GeoJSON'),
+        import('ol/geom/Point'),
+        import('ol/Feature'),
+        import('ol/proj'),
+      ])
+
+      return {
+        Map: OLMap as unknown as OLModule['Map'],
+        View: OLView as unknown as OLModule['View'],
+        Feature: OLFeature as unknown as OLModule['Feature'],
+        layer: {
+          Tile: TileLayer as unknown as OLModule['layer']['Tile'],
+          Vector: VectorLayer as unknown as OLModule['layer']['Vector'],
+          Image: ImageLayer as unknown as OLModule['layer']['Image'],
+          Heatmap: HeatmapLayer as unknown as OLModule['layer']['Heatmap'],
+        },
+        source: {
+          XYZ: XYZSource as unknown as OLModule['source']['XYZ'],
+          TileWMS: TileWMSSource as unknown as OLModule['source']['TileWMS'],
+          WMTS: WMTSSource as unknown as OLModule['source']['WMTS'],
+          Vector: VectorSource as unknown as OLModule['source']['Vector'],
+          ImageWMS: ImageWMSSource as unknown as OLModule['source']['ImageWMS'],
+          Cluster: ClusterSource as unknown as OLModule['source']['Cluster'],
+        },
+        format: {
+          GeoJSON: GeoJSONFormat as unknown as OLModule['format']['GeoJSON'],
+        },
+        geom: {
+          Point: PointGeom as unknown as OLModule['geom']['Point'],
+        },
+        proj: { fromLonLat, toLonLat, transformExtent },
+      } as OLModule
     } catch {
       throw new Error('无法加载 OpenLayers 库。请确保已安装 ol 包或通过 CDN 引入。');
+    }
+  }
+
+  private async injectCSS(): Promise<void> {
+    if (typeof document === 'undefined') return;
+    if (document.querySelector('link[data-ol-css], style[data-ol-css]')) return;
+    try {
+      await import('ol/ol.css');
+      const style = document.createElement('style');
+      style.setAttribute('data-ol-css', 'true');
+      style.textContent = '';
+      document.head.appendChild(style);
+    } catch {
+      const link = document.createElement('link');
+      link.setAttribute('data-ol-css', 'true');
+      link.rel = 'stylesheet';
+      link.href = 'https://cdn.jsdelivr.net/npm/ol@9/ol.css';
+      document.head.appendChild(link);
     }
   }
 
@@ -543,7 +651,7 @@ export class OLMapEngine implements IMapEngine {
     this.olMap.on('click', (evt: Record<string, unknown>) => {
       const pixel = evt.pixel as number[];
       const coordinate = evt.coordinate as number[];
-      const lngLat = mercatorToLngLat(coordinate as [number, number]);
+      const lngLat = this.toExternal(coordinate as [number, number]);
 
       const features = this.queryFeaturesByPixel(pixel as PixelCoord);
 
@@ -558,7 +666,7 @@ export class OLMapEngine implements IMapEngine {
     this.olMap.on('pointermove', (evt: Record<string, unknown>) => {
       const pixel = evt.pixel as number[];
       const coordinate = evt.coordinate as number[];
-      const lngLat = mercatorToLngLat(coordinate as [number, number]);
+      const lngLat = this.toExternal(coordinate as [number, number]);
 
       this.eventBus!.emit('map:pointermove', {
         lngLat,
@@ -571,7 +679,7 @@ export class OLMapEngine implements IMapEngine {
       const view = this.olMap!.getView();
       const center = view.getCenter();
       const lngLat = center
-        ? mercatorToLngLat(center as [number, number])
+        ? this.toExternal(center as [number, number])
         : ([0, 0] as [number, number]);
 
       this.eventBus!.emit('map:moveend', {

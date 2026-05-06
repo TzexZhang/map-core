@@ -27,9 +27,11 @@ import type {
   PluginContext,
   EventHandler,
   ICustomDataSource,
+  BasemapConfig,
 } from '@mapcore/core';
 import {
   EngineType,
+  LayerType,
   EventBus,
   Logger,
   MapError,
@@ -373,6 +375,8 @@ export class MapController {
     }
 
     const controller = new MapController(engine, options);
+
+    controller.loadBasemap(options.engine, options.basemap);
 
     if (options.plugins && options.plugins.length > 0) {
       for (const plugin of options.plugins) {
@@ -826,5 +830,108 @@ export class MapController {
     }
 
     return resolved;
+  }
+
+  private static readonly DEFAULT_OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+  private loadBasemap(engineType: EngineType, basemap?: BasemapConfig): void {
+    const preset = basemap?.preset ?? 'osm';
+
+    if (preset === 'blank') {
+      this.logger.info('loadBasemap', '底图预设为 blank，跳过底图加载');
+      return;
+    }
+
+    if (engineType === EngineType.OpenLayers) {
+      this.loadBasemap2D(basemap);
+    } else if (engineType === EngineType.Cesium) {
+      this.loadBasemap3D(basemap);
+    }
+  }
+
+  private loadBasemap2D(basemap?: BasemapConfig): void {
+    let url = basemap?.url;
+
+    if (!url) {
+      const tileServiceBase = deployConfig.getTileServiceBase();
+      if (tileServiceBase) {
+        url = tileServiceBase;
+      } else {
+        url = MapController.DEFAULT_OSM_URL;
+      }
+    }
+
+    if (url.includes('{{')) {
+      url = deployConfig.resolveUrl(url);
+    }
+
+    const config: LayerConfig = {
+      id: '__mapcore_basemap__',
+      type: LayerType.Tile,
+      url,
+      name: '底图',
+      visible: true,
+      opacity: basemap?.opacity ?? 1,
+      minZoom: basemap?.minZoom,
+      maxZoom: basemap?.maxZoom,
+      zIndex: 0,
+    };
+
+    this.layerManager.addLayer(config);
+    this.logger.info('loadBasemap2D', `底图已加载: ${url.substring(0, 80)}...`);
+  }
+
+  private loadBasemap3D(_basemap?: BasemapConfig): void {
+    const native = this.engine.getNativeInstance() as Record<string, unknown> | null;
+    if (!native) {
+      this.logger.warn('loadBasemap3D', '无法获取 Cesium Viewer 实例');
+      return;
+    }
+
+    const imageryLayers = native.imageryLayers as
+      | {
+          addImageryProvider: (provider: unknown) => unknown;
+          removeImageryProvider: (provider: unknown) => boolean;
+        }
+      | undefined;
+
+    if (!imageryLayers) {
+      this.logger.warn('loadBasemap3D', '无法获取 Cesium imageryLayers');
+      return;
+    }
+
+    try {
+      const Cesium = (window as unknown as Record<string, unknown>).Cesium as
+        | Record<string, unknown>
+        | undefined;
+      if (!Cesium) {
+        this.logger.warn('loadBasemap3D', 'Cesium 全局对象未找到');
+        return;
+      }
+
+      const TileMapServiceImageryProvider = Cesium.TileMapServiceImageryProvider as
+        | (new (options: Record<string, unknown>) => unknown)
+        | undefined;
+
+      if (TileMapServiceImageryProvider) {
+        const provider = new TileMapServiceImageryProvider({
+          url: MapController.DEFAULT_OSM_URL,
+        });
+        imageryLayers.addImageryProvider(provider);
+        this.logger.info('loadBasemap3D', 'OSM 影像底图已加载');
+      }
+
+      const createWorldTerrain = Cesium.createWorldTerrain as (() => unknown) | undefined;
+      if (createWorldTerrain) {
+        const terrainProvider = createWorldTerrain();
+        native.terrainProvider = terrainProvider;
+        this.logger.info('loadBasemap3D', 'Cesium World Terrain 已加载');
+      }
+    } catch (err) {
+      this.logger.warn(
+        'loadBasemap3D',
+        `3D 底图加载失败: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
   }
 }

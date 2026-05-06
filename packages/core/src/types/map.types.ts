@@ -121,6 +121,17 @@ export interface FlyToOptions {
 }
 
 /**
+ * 坐标系类型
+ * @description 控制 SDK 外部接口使用的坐标系。
+ *              SDK 内部始终使用 WGS84（EPSG:4326）作为标准，
+ *              外部调用方可根据需要选择传入/接收的坐标格式。
+ *
+ * - `'EPSG:4326'`（默认）：WGS84 经纬度 [经度, 纬度]，单位：度
+ * - `'EPSG:3857'`：Web Mercator 投影 [x, y]，单位：米
+ */
+export type CoordinateSystem = 'EPSG:4326' | 'EPSG:3857';
+
+/**
  * 渲染引擎类型枚举
  * @description 定义 SDK 支持的地图渲染引擎类型。
  *              选择不同引擎决定了地图的显示模式（2D 平面 / 3D 球体）。
@@ -188,6 +199,36 @@ export interface GeoJSONFeatureCollection {
 }
 
 /**
+ * 底图配置
+ * @description 控制地图初始化时自动加载的底图瓦片图层。
+ *              - 2D 模式：支持自定义 URL 或使用内置 OSM 兜底
+ *              - 3D 模式：自动加载内置 OSM 影像 + Cesium World Terrain
+ */
+export interface BasemapConfig {
+  /**
+   * 自定义底图瓦片 URL 模板（仅 2D 模式生效）
+   * 支持 {x}、{y}、{z} 占位符，也支持 {{env:KEY}} / {{tileBase}} 部署占位符。
+   * 优先级高于 preset。不传则使用 preset 指定的预设底图。
+   * @example 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+   * @example '{{tileBase}}/{z}/{x}/{y}.png'
+   */
+  url?: string;
+  /**
+   * 预设底图类型（仅 2D 模式生效）
+   * 当 url 未设置时使用此预设。默认 'osm'。
+   * - 'osm'：OpenStreetMap 标准瓦片
+   * - 'blank'：不加载任何底图（完全空白）
+   */
+  preset?: 'osm' | 'blank';
+  /** 底图透明度，取值 0~1，默认 1 */
+  opacity?: number;
+  /** 底图最小可见缩放级别 */
+  minZoom?: number;
+  /** 底图最大可见缩放级别 */
+  maxZoom?: number;
+}
+
+/**
  * SDK 初始化主配置
  * @description 创建地图实例时传入的完整配置对象。
  *              SDK 提供基础地图能力（渲染、图层、事件），
@@ -199,8 +240,21 @@ export interface MapCoreOptions {
   container: HTMLElement | string;
   /** 渲染引擎类型：OpenLayers（2D）或 Cesium（3D） */
   engine: EngineType;
+  /**
+   * 外部接口使用的坐标系，默认 'EPSG:4326'。
+   * - 'EPSG:4326'：传入/接收 WGS84 经纬度 [经度, 纬度]
+   * - 'EPSG:3857'：传入/接收 Web Mercator 投影坐标 [x(米), y(米)]
+   * SDK 内部自动处理投影转换，适配器层透明。
+   */
+  coordinateSystem?: CoordinateSystem;
   /** 初始视图状态（中心点、缩放级别等），不传则使用引擎默认视图 */
   initialView?: ViewState;
+  /**
+   * 底图配置
+   * 不传或传 {} 时使用默认底图（2D: OSM，3D: OSM + World Terrain）。
+   * 传 { preset: 'blank' } 时不加载底图。
+   */
+  basemap?: BasemapConfig;
   /** 调试模式配置 */
   debug?: DebugConfig;
   /** 初始化时自动注册的插件列表 */

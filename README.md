@@ -2,403 +2,267 @@
 
 > 通用地图 SDK — 基于 OpenLayers（2D）与 Cesium（3D）的统一地图基础能力封装
 
-## 概述
+---
 
-MapCore 是一个纯 TypeScript 实现的通用地图 SDK，屏蔽 OpenLayers 与 Cesium 的底层 API 差异，对外暴露**统一 TypeScript 接口**。SDK **只提供基础地图能力**，业务功能通过插件和自定义数据源扩展。
+## 项目概述
+
+MapCore 是一个纯 TypeScript 实现的通用地图 SDK，屏蔽 OpenLayers 与 Cesium 的底层 API 差异，对外暴露统一 TypeScript 接口。SDK 只提供基础地图能力（渲染、图层、视图、事件），业务功能通过插件和自定义数据源扩展。
 
 ### 架构原则
 
 - **SDK 只做基础能力**：地图渲染、图层管理、视图控制、事件系统
-- **数据获取归业务方**：SDK 不暴露 HTTP/WebSocket 数据源给外部，业务方自行获取数据后通过 `updateLayerData()` 或 `ICustomDataSource` 注入
-- **扩展靠插件**：测量、绘制、轨迹回放等业务功能通过 IPlugin 接口扩展
+- **数据获取归业务方**：SDK 不暴露 HTTP/WebSocket 数据源给外部
+- **扩展靠插件**：业务功能通过 `IPlugin` 接口扩展
 - **内外隔离**：内部 HTTP/WS 是 SDK 私有实现，外部不可调用
 
----
+### 坐标系统设计
 
-## 快速开始
+SDK 采用 **内部统一 + 外部可选** 的坐标系统策略：
 
-### 安装
+| 层级 | 坐标系 | 说明 |
+| --- | --- | --- |
+| SDK 外部接口 | 由 `coordinateSystem` 配置决定 | `'EPSG:4326'`（默认）或 `'EPSG:3857'` |
+| OLMapEngine 内部 | EPSG:3857 (Web Mercator) | OpenLayers 原生投影 |
+| CesiumMapEngine 内部 | EPSG:4326 (WGS84) | Cesium 原生坐标系 |
+| GeoJSON 数据 | EPSG:4326 | 遵循 RFC 7946 规范，不受配置影响 |
 
-```bash
-pnpm install @mapcore/sdk ol cesium
-```
+适配器层通过 `toInternal()` / `toExternal()` 方法透明转换，调用方只需设置 `coordinateSystem` 即可。
 
-### 基础使用
-
-```typescript
-import { MapController, EngineType, LayerType } from '@mapcore/sdk';
-
-// 1. 创建地图
-const map = await MapController.create({
-  container: 'map-container',
-  engine: EngineType.OpenLayers,
-  initialView: { center: [116.397428, 39.90923], zoom: 10 },
-});
-
-// 2. 添加底图
-map.addLayer({
-  id: 'base-tile',
-  type: LayerType.Tile,
-  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-});
-
-// 3. 添加矢量图层
-map.addLayer({
-  id: 'targets',
-  type: LayerType.Vector,
-  style: {
-    fillColor: 'rgba(255, 0, 0, 0.3)',
-    strokeColor: '#ff0000',
-    pointRadius: 6,
-  },
-});
-
-// 4. 外部获取数据后注入图层（业务方自行获取数据）
-const response = await fetch('https://my-api.com/targets');
-const geojsonData = await response.json();
-map.updateLayerData('targets', geojsonData);
-
-// 5. 监听事件
-map.on('map:click', (payload) => {
-  console.log('点击位置:', payload.lngLat);
-});
-
-// 6. 销毁
-map.destroy();
-```
-
----
-
-## 外部可调用 API
-
-### MapController（主控制器）
-
-SDK 的核心入口，所有操作通过此类进行。
-
-#### 生命周期
-
-| API | 说明 | 返回值 |
-|-----|------|--------|
-| `MapController.create(options)` | 创建地图实例 | `Promise<MapController>` |
-| `map.destroy()` | 销毁实例，释放所有资源 | `void` |
-
-#### 图层操作
-
-| API | 说明 | 返回值 |
-|-----|------|--------|
-| `map.addLayer(config, groupId?)` | 添加图层 | `string` |
-| `map.addLayers(configs, groupId?)` | 批量添加图层 | `string[]` |
-| `map.removeLayer(layerId)` | 移除图层 | `void` |
-| `map.setLayerVisible(layerId, visible)` | 设置可见性 | `void` |
-| `map.setLayerOpacity(layerId, opacity)` | 设置透明度（0~1） | `void` |
-| `map.updateLayerData(layerId, data)` | **更新矢量图层数据（外部数据注入核心方法）** | `void` |
-| `map.setGroupVisible(groupId, visible)` | 按分组设置可见性 | `void` |
-| `map.getLayerState(layerId)` | 获取图层状态 | `LayerState \| undefined` |
-| `map.getLayerStates()` | 获取所有图层状态 | `LayerState[]` |
-| `map.exportLayerConfigs()` | 导出图层配置 | `LayerConfig[]` |
-| `map.importLayerConfigs(configs)` | 导入图层配置 | `void` |
-
-#### 视图控制
-
-| API | 说明 | 返回值 |
-|-----|------|--------|
-| `map.setView(state)` | 设置视图（立即跳转） | `void` |
-| `map.getView()` | 获取当前视图状态 | `ViewState` |
-| `map.flyTo(options)` | 飞行到目标位置（带动画） | `Promise<void>` |
-| `map.getBounds()` | 获取当前可视范围 | `BoundingBox` |
-
-#### 自定义数据源
-
-| API | 说明 | 返回值 |
-|-----|------|--------|
-| `map.registerCustomDataSource(source)` | 注册自定义数据源 | `void` |
-| `map.unregisterCustomDataSource(sourceId)` | 注销自定义数据源 | `void` |
-| `map.fetchFromCustomSource(sourceId)` | 从自定义数据源拉取数据 | `Promise<GeoJSONFeatureCollection>` |
-| `map.startCustomDataSource(sourceId, interval)` | 启动定时刷新 | `void` |
-| `map.stopCustomDataSource(sourceId)` | 停止定时刷新 | `void` |
-
-#### 事件系统
-
-| API | 说明 | 返回值 |
-|-----|------|--------|
-| `map.on(event, handler)` | 订阅事件 | `() => void`（取消订阅） |
-| `map.once(event, handler)` | 订阅一次性事件 | `void` |
-| `map.off(event, handler)` | 取消订阅 | `void` |
-
-#### 插件系统
-
-| API | 说明 | 返回值 |
-|-----|------|--------|
-| `map.use(plugin, options?)` | 注册并安装插件 | `Promise<void>` |
-| `map.unuse(pluginName)` | 卸载插件 | `void` |
-
-#### 底层访问
-
-| API | 说明 | 返回值 |
-|-----|------|--------|
-| `map.getNativeInstance()` | 获取底层引擎实例（逃生舱口） | `unknown` |
-| `map.getEventBus()` | 获取事件总线 | `EventBus` |
-
----
-
-### 事件列表
-
-| 事件名 | 常量 | 说明 |
-|--------|------|------|
-| `map:click` | `MapEvents.MAP_CLICK` | 地图单击 |
-| `map:dblclick` | `MapEvents.MAP_DBLCLICK` | 地图双击 |
-| `map:pointermove` | `MapEvents.MAP_POINTERMOVE` | 鼠标移动 |
-| `map:moveend` | `MapEvents.MAP_MOVEEND` | 视图变化完成 |
-| `map:contextmenu` | `MapEvents.MAP_CONTEXTMENU` | 右键菜单 |
-| `feature:click` | `MapEvents.FEATURE_CLICK` | 要素点击 |
-| `feature:hover` | `MapEvents.FEATURE_HOVER` | 要素悬停 |
-| `layer:add` | `MapEvents.LAYER_ADD` | 图层添加 |
-| `layer:remove` | `MapEvents.LAYER_REMOVE` | 图层移除 |
-| `datasource:update` | `MapEvents.DATASOURCE_UPDATE` | 数据源更新 |
-| `system:ready` | `MapEvents.READY` | SDK 初始化完成 |
-
----
-
-### 图层类型
-
-| 枚举值 | 说明 | 引擎 |
-|--------|------|------|
-| `LayerType.Tile` | 栅格瓦片（XYZ/TMS） | OL / Cesium |
-| `LayerType.WMS` | OGC WMS 服务 | OL / Cesium |
-| `LayerType.WMTS` | OGC WMTS 服务 | OL / Cesium |
-| `LayerType.Vector` | 矢量要素（GeoJSON） | OL / Cesium |
-| `LayerType.Heatmap` | 热力图 | OL |
-| `LayerType.Tileset3D` | 3D Tiles | Cesium |
-| `LayerType.Terrain` | 地形服务 | Cesium |
-| `LayerType.CZML` | CZML 动态数据 | Cesium |
-| `LayerType.Custom` | 自定义图层 | 插件扩展 |
-
----
-
-## 使用示例
-
-### 方式一：直接注入数据（最简单）
-
-```typescript
-const map = await MapController.create({
-  container: 'map',
-  engine: EngineType.OpenLayers,
-});
-
-map.addLayer({ id: 'targets', type: LayerType.Vector });
-
-// 业务方自行获取数据，注入地图
-async function refreshTargets() {
-  const res = await fetch('/api/targets');
-  const data = await res.json();
-  map.updateLayerData('targets', data);
-}
-refreshTargets();
-```
-
-### 方式二：注册自定义数据源（支持定时刷新）
-
-```typescript
-// 实现自定义数据源接口
-map.registerCustomDataSource({
-  id: 'my-targets',
-  async fetch() {
-    const res = await fetch('/api/targets');
-    return res.json();
-  },
-  dispose() { /* 清理资源 */ },
-});
-
-// 手动拉取一次
-const data = await map.fetchFromCustomSource('my-targets');
-map.updateLayerData('targets', data);
-
-// 或启动定时刷新（每 5 秒）
-map.startCustomDataSource('my-targets', 5000);
-
-// 监听数据更新事件
-map.on('datasource:update', (payload) => {
-  if (payload.sourceId === 'my-targets') {
-    map.updateLayerData('targets', payload.data);
-  }
-});
-```
-
-### 方式三：插件扩展业务功能
-
-```typescript
-import type { IPlugin, PluginContext } from '@mapcore/sdk';
-
-const measurePlugin: IPlugin = {
-  name: 'MeasureTool',
-  version: '1.0.0',
-  install(ctx: PluginContext) {
-    let points: [number, number][] = [];
-    ctx.eventBus.on('map:click', (payload: any) => {
-      points.push(payload.lngLat);
-      if (points.length === 2) {
-        const dist = distance(points[0], points[1]);
-        console.log(`距离: ${(dist / 1000).toFixed(2)} 公里`);
-        points = [];
-      }
-    });
-  },
-  uninstall() { /* 清理 */ },
-};
-
-await map.use(measurePlugin);
-```
-
-### 3D 地球（Cesium）
-
-```typescript
-const map = await MapController.create({
-  container: 'map',
-  engine: EngineType.Cesium,
-  initialView: {
-    center: [116.397, 39.909],
-    zoom: 10,
-    pitch: -45,
-    heading: 0,
-  },
-});
-
-map.addLayer({
-  id: 'buildings',
-  type: LayerType.Tileset3D,
-  url: '/3dtiles/buildings/tileset.json',
-});
-
-map.addLayer({
-  id: 'terrain',
-  type: LayerType.Terrain,
-  url: '/terrain/world',
-});
-```
-
-### WebComponent 方式
-
-```html
-<map-core engine="openlayers" center="116.397,39.909" zoom="10"></map-core>
-
-<script>
-  const mapEl = document.querySelector('map-core');
-  mapEl.addEventListener('map-ready', (e) => {
-    const controller = e.detail.controller;
-    controller.addLayer({
-      id: 'base',
-      type: 'tile',
-      url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    });
-  });
-</script>
-```
+**关键文件**：
+- `packages/core/src/types/map.types.ts` — `CoordinateSystem` 类型定义、`MapCoreOptions.coordinateSystem` 字段
+- `packages/adapter-ol/src/OLMapEngine.ts` — OL 适配器坐标转换逻辑
+- `packages/adapter-cesium/src/CesiumMapEngine.ts` — Cesium 适配器坐标转换逻辑
 
 ---
 
 ## 项目结构
 
 ```
-packages/
-├── core/              # 核心包 - 类型、接口、事件、工具（零依赖）
-├── adapter-ol/        # OpenLayers 2D 引擎适配器（内部）
-├── adapter-cesium/    # Cesium 3D 引擎适配器（内部）
-├── datasource/        # 数据源管理（内部实现，不暴露给外部）
-├── bridge/            # 跨端通信桥（内部 + 可选外部使用）
-└── sdk/               # 聚合包（对外发布入口）
+MapCore/
+├── packages/
+│   ├── core/               # 核心包 — 类型、接口、事件、工具（零依赖）
+│   ├── adapter-ol/         # OpenLayers 2D 引擎适配器（内部）
+│   ├── adapter-cesium/     # Cesium 3D 引擎适配器（内部）
+│   ├── datasource/         # 数据源管理（内部，不暴露给外部）
+│   ├── bridge/             # 跨端通信桥（Android/iOS/Qt）
+│   └── sdk/                # 聚合包（对外发布入口）
+├── .eslintrc.cjs
+├── tsconfig.base.json
+├── tsconfig.json
+├── turbo.json
+├── pnpm-workspace.yaml
+├── package.json
+├── README.md               # 本文档（项目开发者文档）
+└── GUIDE.md                # 外部使用者指南
 ```
+
+### 包依赖关系
+
+```
+                    ┌──────────────┐
+                    │  @mapcore/sdk │  ← 对外发布入口
+                    └──────┬───────┘
+           ┌───────────────┼───────────────┐
+           │               │               │
+    ┌──────▼──────┐  ┌─────▼──────┐  ┌─────▼──────┐
+    │ adapter-ol  │  │ adapter-   │  │   bridge   │
+    │ (2D 引擎)   │  │ cesium     │  │ (跨端通信)  │
+    └──────┬──────┘  │ (3D 引擎)  │  └─────┬──────┘
+           │         └─────┬──────┘        │
+           │               │               │
+    ┌──────▼───────────────▼───────────────▼──┐
+    │              @mapcore/core              │
+    │       （类型、接口、事件、工具）           │
+    └───────────────────┬────────────────────┘
+                        │
+                ┌───────▼────────┐
+                │   datasource   │
+                │ （数据源管理）   │
+                └────────────────┘
+```
+
+### 各包职责
+
+| 包名 | 职责 | 对外可见 | 依赖 |
+| --- | --- | --- | --- |
+| `@mapcore/core` | 类型定义、接口契约、事件系统、工具函数、部署配置 | ✅ | 无（零依赖） |
+| `@mapcore/adapter-ol` | OpenLayers 2D 引擎适配器 | ❌ | core, ol (peer) |
+| `@mapcore/adapter-cesium` | Cesium 3D 引擎适配器 | ❌ | core, cesium (peer) |
+| `@mapcore/datasource` | HTTP/WebSocket 数据源管理、中间件 | ❌ | core |
+| `@mapcore/bridge` | 跨端通信桥（Android/iOS/Qt） | ✅ | core |
+| `@mapcore/sdk` | 聚合包，统一导出入口 | ✅ | 所有子包 |
+
+---
+
+## 环境要求
+
+| 工具 | 版本要求 |
+| --- | --- |
+| Node.js | >= 18.0.0 |
+| pnpm | >= 8.0.0 |
+| 操作系统 | Windows / macOS / Linux |
+
+---
+
+## 开发指南
+
+### 安装依赖
+
+```bash
+pnpm install
+```
+
+pnpm workspace 自动关联所有子包，无需手动 link。
+
+### 构建命令
+
+```bash
+pnpm build        # 全量构建（Turborepo 按依赖顺序编排）
+pnpm type-check   # TypeScript 类型检查
+pnpm lint         # ESLint 检查
+pnpm lint:fix     # ESLint 自动修复
+pnpm format       # Prettier 格式化
+pnpm test         # 运行测试
+pnpm clean        # 清理构建产物
+```
+
+### 开发流程
+
+```bash
+# 1. 安装依赖
+pnpm install
+
+# 2. 修改代码...
+
+# 3. 类型检查 + lint
+pnpm type-check && pnpm lint
+
+# 4. 构建（Turborepo 自动检测变更，只重构建受影响的包）
+pnpm build
+```
+
+### 添加新类型/接口
+
+1. 在 `packages/core/src/types/` 或 `interfaces/` 中定义
+2. 在 `packages/core/src/types/index.ts` 中导出
+3. 在 `packages/sdk/src/index.ts` 中重新导出（如果需要对外暴露）
+
+---
+
+## 环境配置
+
+### 瓦片资源地址
+
+编辑 `.env` 文件配置瓦片和 Cesium 资源地址：
+
+```bash
+# .env（开发环境 — 在线资源）
+MAPCORE_TILE_BASE=https://tile.openstreetmap.org/{z}/{x}/{y}.png
+MAPCORE_CESIUM_ION=null
+```
+
+```bash
+# .env.production（生产环境 — 内网地址）
+MAPCORE_TILE_BASE=http://192.168.10.5:8080/tiles/{z}/{x}/{y}.png
+MAPCORE_CESIUM_BASE_URL=http://192.168.10.5:8080/cesium
+MAPCORE_CESIUM_ION=null
+MAPCORE_TERRAIN_URL=http://192.168.10.5:8080/terrain
+```
+
+### 配置变量说明
+
+| 变量 | 必填 | 说明 |
+| --- | --- | --- |
+| `MAPCORE_TILE_BASE` | 是 | 默认瓦片底图地址 |
+| `MAPCORE_SATELLITE_URL` | 否 | 卫星影像瓦片地址 |
+| `MAPCORE_WMS_URL` | 否 | WMS 服务地址 |
+| `MAPCORE_CESIUM_BASE_URL` | 3D 时必填 | Cesium 静态资源路径 |
+| `MAPCORE_CESIUM_ION` | 否 | Cesium Ion 地址，`null` 禁用 |
+| `MAPCORE_TERRAIN_URL` | 否 | 地形服务地址 |
+| `MAPCORE_TILESET3D_URL` | 否 | 3D Tiles 服务路径 |
+
+### 占位符机制
+
+SDK 内部 `DeployConfigManager` 支持在 URL 中使用占位符：
+
+| 格式 | 说明 |
+| --- | --- |
+| `{{env:KEY}}` | 从环境变量 `MAPCORE_KEY` 读取 |
+| `{{tileBase}}` | 内置：默认瓦片地址 |
+| `{{terrainUrl}}` | 内置：地形服务地址 |
+| `{{cesiumBaseUrl}}` | 内置：Cesium 资源路径 |
 
 ---
 
 ## 部署方案
 
-### 瓦片资源动态配置
-
-所有瓦片资源 URL 支持通过 SDK 项目自身的 `.env` 文件动态配置。构建时由 Vite/Webpack 将环境变量注入产物，运行时自动替换。外部调用方无需关心部署地址，直接使用占位符即可。
-
-```typescript
-// 外部调用方代码：使用占位符，不硬编码地址
-map.addLayer({
-  id: 'base-tile',
-  type: LayerType.Tile,
-  url: '{{env:TILE_BASE}}',   // 构建时从 SDK 项目的 .env 替换
-});
-
-map.addLayer({
-  id: 'satellite',
-  type: LayerType.Tile,
-  url: '{{env:SATELLITE_URL}}',
-});
-
-// 也可以使用内置占位符
-map.addLayer({
-  id: 'base',
-  type: LayerType.Tile,
-  url: '{{tileBase}}',        // 替换为 ProxyConfig.tileServiceBase
-});
-```
+### 构建产物
 
 ```bash
-# SDK 项目的 .env 文件（构建时注入产物，不随外部项目发布）
-MAPCORE_TILE_BASE=http://192.168.10.5:8080/tiles/{z}/{x}/{y}.png
-MAPCORE_SATELLITE_URL=http://192.168.10.5:8080/satellite/{z}/{x}/{y}.png
-MAPCORE_TERRAIN_URL=http://192.168.10.5:8080/terrain
-MAPCORE_CESIUM_BASE_URL=http://192.168.10.5:8080/cesium
-MAPCORE_CESIUM_ION=null
-
-# Vite 项目使用 VITE_ 前缀
-VITE_MAPCORE_TILE_BASE=http://192.168.10.5:8080/tiles/{z}/{x}/{y}.png
-VITE_MAPCORE_SATELLITE_URL=http://192.168.10.5:8080/satellite/{z}/{x}/{y}.png
+pnpm build
 ```
 
-### 占位符语法
+构建完成后各包产物位于 `packages/*/dist/`：
 
-| 格式 | 说明 | 示例 |
-|------|------|------|
-| `{{env:KEY}}` | 从环境变量 MAPCORE_KEY 读取 | `{{env:TILE_BASE}}` → `.env` 中 `MAPCORE_TILE_BASE` 的值 |
-| `{{tileBase}}` | 内置：默认瓦片地址 | → `ProxyConfig.tileServiceBase` |
-| `{{terrainUrl}}` | 内置：地形服务地址 | → `ProxyConfig.terrainServiceUrl` |
-| `{{cesiumBaseUrl}}` | 内置：Cesium 资源路径 | → `ProxyConfig.cesiumBaseUrl` |
+| 包 | 产物 |
+| --- | --- |
+| `core` | `dist/types/` + `dist/index.js` (ESM) |
+| `adapter-ol` | `dist/types/` + `dist/index.js` |
+| `adapter-cesium` | `dist/types/` + `dist/index.js` |
+| `datasource` | `dist/types/` + `dist/index.js` |
+| `bridge` | `dist/types/` + `dist/index.js` |
+| `sdk` | `dist/types/` + `dist/mapcore.esm.js` + `dist/mapcore.umd.js` |
 
-### 配置项说明
+### 外部引用方式
 
-| 环境变量 | 说明 | 示例 |
-|----------|------|------|
-| `MAPCORE_TILE_BASE` | 默认瓦片服务地址 | `http://192.168.1.100:8080/tiles/{z}/{x}/{y}.png` |
-| `MAPCORE_CESIUM_BASE_URL` | Cesium 静态资源路径 | `http://192.168.1.100/static/cesium` |
-| `MAPCORE_CESIUM_ION` | Cesium Ion 地址，`null` 禁用 | `null` |
-| `MAPCORE_TERRAIN_URL` | 地形服务地址 | `http://192.168.1.100:8080/terrain` |
+**方式一：file: 协议引用（开发阶段）**
 
-#### 架构隔离
-
+```json
+{
+  "dependencies": {
+    "@mapcore/sdk": "file:../MapCore/packages/sdk"
+  }
+}
 ```
-┌─────────────────────────────────────┐
-│         外部业务方（不可见）          │
-│   MapCoreOptions { container, engine }│
-│   无 proxy / deploy / 数据源配置     │
-├─────────────────────────────────────┤
-│           SDK 公共 API 层            │
-│   MapController.addLayer()          │
-│   MapController.updateLayerData()   │
-│   MapController.registerCustom...() │
-├─────────────────────────────────────┤
-│         SDK 内部层（不可见）          │
-│   DeployConfigManager ← 环境变量     │
-│   内部 HTTP/WS 数据获取              │
-│   引擎适配器 (OL / Cesium)          │
-└─────────────────────────────────────┘
+
+**方式二：构建产物拷贝**
+
+```bash
+cp -r packages/sdk/dist/ /your-project/libs/mapcore/
 ```
+
+### 生产环境部署清单
+
+| 步骤 | 说明 |
+| --- | --- |
+| 1. 瓦片服务 | 部署内网 XYZ/TMS 瓦片服务 |
+| 2. Cesium 静态资源 | 将 `cesium/Build/Cesium/` 下的 Workers/Assets/ThirdParty/Widgets 部署到 HTTP 服务器 |
+| 3. 地形服务 | 如需 3D 地形，部署 Cesium Terrain Server 或自建地形服务 |
+| 4. 环境变量 | 配置 `.env.production` 指向内网服务地址 |
+| 5. 禁用 Ion | 设置 `MAPCORE_CESIUM_ION=null` 禁用 Cesium Ion 外网请求 |
 
 ---
 
-## 工程化
+## 常见问题
+
+### 修改 core 后下游包报类型错误
 
 ```bash
-pnpm install          # 安装依赖
-pnpm build            # 构建
-pnpm test             # 运行测试
-pnpm lint             # 代码检查
-pnpm format           # 格式化
+cd packages/core && pnpm build
+cd ../.. && pnpm build
+```
+
+### 构建报错
+
+```bash
+pnpm clean && pnpm build
+```
+
+### peer 依赖缺失
+
+```bash
+cd packages/adapter-ol && pnpm install
+cd packages/adapter-cesium && pnpm install
 ```
 
 ---

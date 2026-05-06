@@ -29,8 +29,9 @@ import type {
   GeoJSONFeature,
   LayerConfig,
   EventBus,
+  CoordinateSystem,
 } from '@mapcore/core';
-import { LayerType, MapError, MapErrorCode, deployConfig } from '@mapcore/core';
+import { LayerType, MapError, MapErrorCode, deployConfig, lngLatToMercator, mercatorToLngLat } from '@mapcore/core';
 
 /**
  * Cesium Viewer 实例接口（简化）
@@ -158,6 +159,32 @@ export class CesiumMapEngine implements IMapEngine {
   /** 是否已初始化 */
   private initialized: boolean = false;
 
+  private coordinateSystem: CoordinateSystem = 'EPSG:4326';
+
+  /**
+   * 将外部坐标转换为 Cesium 内部坐标（WGS84 经纬度）
+   * - 如果外部使用 EPSG:4326 → 直接透传
+   * - 如果外部使用 EPSG:3857 → 做 mercatorToLngLat 转换
+   */
+  private toInternal(coord: [number, number]): [number, number] {
+    if (this.coordinateSystem === 'EPSG:4326') {
+      return coord;
+    }
+    return mercatorToLngLat(coord);
+  }
+
+  /**
+   * 将 Cesium 内部坐标（WGS84 经纬度）转换为外部坐标
+   * - 如果外部使用 EPSG:4326 → 直接透传
+   * - 如果外部使用 EPSG:3857 → 做 lngLatToMercator 转换
+   */
+  private toExternal(coord: [number, number]): [number, number] {
+    if (this.coordinateSystem === 'EPSG:4326') {
+      return coord;
+    }
+    return lngLatToMercator(coord);
+  }
+
   /**
    * 初始化 Cesium 引擎
    * @description 创建 Viewer 实例，配置初始相机姿态，注册交互事件。
@@ -169,6 +196,8 @@ export class CesiumMapEngine implements IMapEngine {
   async init(container: HTMLElement, options: MapCoreOptions): Promise<void> {
     try {
       this.cesium = await this.loadCesium();
+      await this.injectCSS();
+      this.coordinateSystem = options.coordinateSystem ?? 'EPSG:4326';
       const Cesium = this.cesium;
 
       const cesiumBaseUrl = deployConfig.getCesiumBaseUrl();
@@ -200,8 +229,9 @@ export class CesiumMapEngine implements IMapEngine {
       this.viewer = new Cesium.Viewer(container, viewerOptions);
 
       if (options.initialView) {
-        const center = options.initialView.center;
-        const height = center.length > 2 ? (center as number[])[2] : 10000000;
+        const rawCenter = options.initialView.center;
+        const center = this.toInternal(rawCenter as [number, number]);
+        const height = rawCenter.length > 2 ? (rawCenter as number[])[2] : 10000000;
         this.viewer.camera.flyTo({
           destination: Cesium.Cartographic.fromDegrees(center[0], center[1], height),
           orientation: {
@@ -246,10 +276,11 @@ export class CesiumMapEngine implements IMapEngine {
     const Cesium = this.cesium!;
 
     const currentCamera = this.viewer!.camera.positionCartographic;
-    const center = state.center ?? [
+    const rawCenter = state.center ?? [
       Cesium.Math.toDegrees(currentCamera.longitude),
       Cesium.Math.toDegrees(currentCamera.latitude),
     ];
+    const center = this.toInternal(rawCenter as [number, number]);
     const height =
       state.center && state.center.length > 2
         ? (state.center as number[])[2]
@@ -281,7 +312,7 @@ export class CesiumMapEngine implements IMapEngine {
     const zoom = Math.max(0, Math.round(22 - Math.log2(height / 100)));
 
     return {
-      center: [lng, lat] as LngLat,
+      center: this.toExternal([lng, lat]),
       zoom,
       heading: Cesium.Math.toDegrees(camera.heading),
       pitch: Cesium.Math.toDegrees(camera.pitch),
@@ -295,11 +326,12 @@ export class CesiumMapEngine implements IMapEngine {
     this.assertReady('flyTo');
     const Cesium = this.cesium!;
 
+    const center = this.toInternal([options.center[0], options.center[1]]);
     const height = options.center.length > 2 ? (options.center as number[])[2] : undefined;
 
     return new Promise<void>((resolve) => {
       this.viewer!.camera.flyTo({
-        destination: Cesium.Cartographic.fromDegrees(options.center[0], options.center[1], height),
+        destination: Cesium.Cartographic.fromDegrees(center[0], center[1], height),
         orientation: {
           heading: Cesium.Math.toRadians(options.heading ?? 0),
           pitch: Cesium.Math.toRadians(options.pitch ?? -90),
@@ -327,11 +359,14 @@ export class CesiumMapEngine implements IMapEngine {
     const latExtent = Math.min(degreesFromMeters(range) ?? 30, 89);
     const lngExtent = Math.min(latExtent * 1.5, 179);
 
+    const sw = this.toExternal([lng - lngExtent, lat - latExtent]);
+    const ne = this.toExternal([lng + lngExtent, lat + latExtent]);
+
     return {
-      west: lng - lngExtent,
-      south: lat - latExtent,
-      east: lng + lngExtent,
-      north: lat + latExtent,
+      west: sw[0],
+      south: sw[1],
+      east: ne[0],
+      north: ne[1],
     };
   }
 
@@ -341,7 +376,8 @@ export class CesiumMapEngine implements IMapEngine {
   project(lngLat: LngLat): PixelCoord | null {
     this.assertReady('project');
     const Cesium = this.cesium!;
-    const cartesian = Cesium.Cartographic.fromDegrees(lngLat[0], lngLat[1], 0);
+    const internal = this.toInternal(lngLat);
+    const cartesian = Cesium.Cartographic.fromDegrees(internal[0], internal[1], 0);
 
     if (!cartesian) return null;
 
@@ -371,19 +407,19 @@ export class CesiumMapEngine implements IMapEngine {
     if (!Cesium.defined(picked)) {
       const camera = this.viewer!.camera;
       const cartographic = camera.positionCartographic;
-      return [
+      return this.toExternal([
         Cesium.Math.toDegrees(cartographic.longitude),
         Cesium.Math.toDegrees(cartographic.latitude),
-      ] as LngLat;
+      ]);
     }
 
     const cartographic = Cesium.Cartographic.fromCartesian(picked);
     if (!cartographic) return [0, 0] as LngLat;
 
-    return [
+    return this.toExternal([
       Cesium.Math.toDegrees(cartographic.longitude),
       Cesium.Math.toDegrees(cartographic.latitude),
-    ] as LngLat;
+    ]);
   }
 
   /**
@@ -586,6 +622,24 @@ export class CesiumMapEngine implements IMapEngine {
     }
   }
 
+  private async injectCSS(): Promise<void> {
+    if (typeof document === 'undefined') return;
+    if (document.querySelector('link[data-cesium-css], style[data-cesium-css]')) return;
+    try {
+      await import('cesium/Build/Cesium/Widgets/widgets.css');
+      const style = document.createElement('style');
+      style.setAttribute('data-cesium-css', 'true');
+      style.textContent = '';
+      document.head.appendChild(style);
+    } catch {
+      const link = document.createElement('link');
+      link.setAttribute('data-cesium-css', 'true');
+      link.rel = 'stylesheet';
+      link.href = 'https://cdn.jsdelivr.net/npm/cesium@1.120/Build/Cesium/Widgets/widgets.css';
+      document.head.appendChild(link);
+    }
+  }
+
   /**
    * 注册 Cesium 交互事件
    */
@@ -604,10 +658,10 @@ export class CesiumMapEngine implements IMapEngine {
       if (Cesium.defined(cartesian)) {
         const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
         if (cartographic) {
-          lngLat = [
+          lngLat = this.toExternal([
             Cesium.Math.toDegrees(cartographic.longitude),
             Cesium.Math.toDegrees(cartographic.latitude),
-          ];
+          ]);
         }
       }
 

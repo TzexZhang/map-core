@@ -18,6 +18,8 @@ export type {
   GeoJSONFeature,
   GeoJSONFeatureCollection,
   MapCoreOptions,
+  BasemapConfig,
+  CoordinateSystem,
   IPlugin,
   ICustomDataSource,
 } from './map.types';

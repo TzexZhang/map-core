@@ -30,6 +30,8 @@ export type {
   GeoJSONFeature,
   GeoJSONFeatureCollection,
   MapCoreOptions,
+  BasemapConfig,
+  CoordinateSystem,
   IPlugin,
   PluginContext,
   ICustomDataSource,
