@@ -45,7 +45,7 @@ MapCore/
 │   ├── adapter-cesium/     # Cesium 3D 引擎适配器（内部）
 │   ├── datasource/         # 数据源管理（内部，不暴露给外部）
 │   ├── bridge/             # 跨端通信桥（Android/iOS/Qt）
-│   └── sdk/                # 聚合包（对外发布入口）
+│   └── sdk/                # 聚合包（对外发布入口，含 Vite 插件）
 ├── .eslintrc.cjs
 ├── tsconfig.base.json
 ├── tsconfig.json
@@ -83,14 +83,14 @@ MapCore/
 
 ### 各包职责
 
-| 包名 | 职责 | 对外可见 | 依赖 |
-| --- | --- | --- | --- |
-| `@mapcore/core` | 类型定义、接口契约、事件系统、工具函数、部署配置 | ✅ | 无（零依赖） |
-| `@mapcore/adapter-ol` | OpenLayers 2D 引擎适配器 | ❌ | core, ol (peer) |
-| `@mapcore/adapter-cesium` | Cesium 3D 引擎适配器 | ❌ | core, cesium (peer) |
-| `@mapcore/datasource` | HTTP/WebSocket 数据源管理、中间件 | ❌ | core |
-| `@mapcore/bridge` | 跨端通信桥（Android/iOS/Qt） | ✅ | core |
-| `@mapcore/sdk` | 聚合包，统一导出入口 | ✅ | 所有子包 |
+| 包名 | 职责 | 对外可见 | 依赖 | 外部使用场景 |
+| --- | --- | --- | --- | --- |
+| `@mapcore/core` | 类型定义、接口契约、事件系统、工具函数、部署配置 | ✅ | 无（零依赖） | 需要 `IDataSource`/`IDataSourceManager` 等 SDK 未导出的接口时单独引用 |
+| `@mapcore/adapter-ol` | OpenLayers 2D 引擎适配器 | ❌ | core, ol (peer) | 不建议直接引用，由 `MapController` 内部创建 |
+| `@mapcore/adapter-cesium` | Cesium 3D 引擎适配器 | ❌ | core, cesium (peer) | 不建议直接引用，由 `MapController` 内部创建 |
+| `@mapcore/datasource` | HTTP/WebSocket 数据源管理、中间件 | ❌ | core | 不建议直接引用，SDK 内部私有能力，外部通过 `ICustomDataSource` 注入数据 |
+| `@mapcore/bridge` | 跨端通信桥（Android/iOS/Qt） | ✅ | core | 已通过 SDK 导出 `BridgeFactory`/`BridgeEnvironment`，通常无需单独引用 |
+| `@mapcore/sdk` | 聚合包，统一导出入口；提供 `mapEngineSetup()` Vite 插件 | ✅ | 所有子包 | **始终安装**，所有项目的唯一入口 |
 
 ---
 
@@ -166,7 +166,6 @@ MAPCORE_CESIUM_ION=null
 MAPCORE_TILE_BASE=http://192.168.10.5:8080/tiles/{z}/{x}/{y}.png
 MAPCORE_CESIUM_BASE_URL=http://192.168.10.5:8080/cesium
 MAPCORE_CESIUM_ION=null
-MAPCORE_TERRAIN_URL=http://192.168.10.5:8080/terrain
 ```
 
 ### 配置变量说明
@@ -189,7 +188,7 @@ SDK 内部 `DeployConfigManager` 支持在 URL 中使用占位符：
 | --- | --- |
 | `{{env:KEY}}` | 从环境变量 `MAPCORE_KEY` 读取 |
 | `{{tileBase}}` | 内置：默认瓦片地址 |
-| `{{terrainUrl}}` | 内置：地形服务地址 |
+| `{{tileBase}}` | 内置：瓦片服务基础路径 |
 | `{{cesiumBaseUrl}}` | 内置：Cesium 资源路径 |
 
 ---
@@ -237,7 +236,7 @@ cp -r packages/sdk/dist/ /your-project/libs/mapcore/
 | --- | --- |
 | 1. 瓦片服务 | 部署内网 XYZ/TMS 瓦片服务 |
 | 2. Cesium 静态资源 | 将 `cesium/Build/Cesium/` 下的 Workers/Assets/ThirdParty/Widgets 部署到 HTTP 服务器 |
-| 3. 地形服务 | 如需 3D 地形，部署 Cesium Terrain Server 或自建地形服务 |
+| 2. Cesium 资源 | Workers/Assets/Widgets 复制到静态服务器 |
 | 4. 环境变量 | 配置 `.env.production` 指向内网服务地址 |
 | 5. 禁用 Ion | 设置 `MAPCORE_CESIUM_ION=null` 禁用 Cesium Ion 外网请求 |
 

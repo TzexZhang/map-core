@@ -202,7 +202,7 @@ export interface GeoJSONFeatureCollection {
  * 底图配置
  * @description 控制地图初始化时自动加载的底图瓦片图层。
  *              - 2D 模式：支持自定义 URL 或使用内置 OSM 兜底
- *              - 3D 模式：自动加载内置 OSM 影像 + Cesium World Terrain
+ *              - 3D 模式：自动加载内置 OSM 影像
  */
 export interface BasemapConfig {
   /**
@@ -251,7 +251,7 @@ export interface MapCoreOptions {
   initialView?: ViewState;
   /**
    * 底图配置
-   * 不传或传 {} 时使用默认底图（2D: OSM，3D: OSM + World Terrain）。
+   * 不传或传 {} 时使用默认底图（2D: OSM，3D: OSM 影像）。
    * 传 { preset: 'blank' } 时不加载底图。
    */
   basemap?: BasemapConfig;

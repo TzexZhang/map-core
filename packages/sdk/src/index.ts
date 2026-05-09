@@ -44,7 +44,6 @@ export type {
   WMTSLayerConfig,
   HeatmapLayerConfig,
   Tileset3DLayerConfig,
-  TerrainLayerConfig,
   CZMLLayerConfig,
   CustomLayerConfig,
   MapClickPayload,

@@ -6,7 +6,7 @@
  * @module MapCore.Types
  */
 export { EngineType } from './map.types';
-export { LayerType, } from './layer.types';
+export { LayerType } from './layer.types';
 export { MapEvents } from './event.types';
 export { DataSourceType } from './source.types';
 //# sourceMappingURL=index.js.map

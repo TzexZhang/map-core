@@ -37,7 +37,6 @@ export type {
   VectorStyleConfig,
   HeatmapLayerConfig,
   Tileset3DLayerConfig,
-  TerrainLayerConfig,
   CZMLLayerConfig,
   CustomLayerConfig,
   LayerConfig,

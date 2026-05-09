@@ -32,12 +32,6 @@ export interface ProxyConfig {
   cesiumIonServer?: string | null;
 
   /**
-   * 地形服务地址
-   * @example 'http://192.168.1.100:8080/terrain'
-   */
-  terrainServiceUrl?: string;
-
-  /**
    * Cesium 静态资源基础路径
    * @example 'http://192.168.1.100/static/cesium'
    */
@@ -54,7 +48,6 @@ export interface ProxyConfig {
    * {
    *   TILE_BASE: 'http://192.168.1.100:8080/tiles/{z}/{x}/{y}.png',
    *   SATELLITE_URL: 'http://192.168.1.100:8080/satellite/{z}/{x}/{y}.png',
-   *   TERRAIN_URL: 'http://192.168.1.100:8080/terrain',
    * }
    * ```
    */
@@ -81,7 +74,6 @@ const SIMPLE_PLACEHOLDER_REGEX = /\{\{(\w+)\}\}/g;
  */
 const BUILTIN_PLACEHOLDERS: Record<string, keyof ProxyConfig> = {
   tileBase: 'tileServiceBase',
-  terrainUrl: 'terrainServiceUrl',
   cesiumBaseUrl: 'cesiumBaseUrl',
 };
 
@@ -133,7 +125,7 @@ export class DeployConfigManager {
    * @description 将瓦片 URL 中的占位符替换为环境变量中的实际值。
    *              支持两种格式：
    *              - `{{env:KEY}}`：从 envMap 中查找 KEY 对应的值
-   *              - `{{tileBase}}`、`{{terrainUrl}}`：内置占位符
+   *              - `{{tileBase}}`：内置占位符
    *
    * @param url - 原始 URL（可能包含占位符）
    * @returns 替换后的实际 URL
@@ -193,13 +185,6 @@ export class DeployConfigManager {
   }
 
   /**
-   * 获取地形服务地址
-   */
-  getTerrainServiceUrl(): string | undefined {
-    return this.config.terrainServiceUrl;
-  }
-
-  /**
    * 获取 Cesium 静态资源路径
    */
   getCesiumBaseUrl(): string | undefined {
@@ -238,7 +223,6 @@ export class DeployConfigManager {
       this.config.cesiumIonServer =
         env.MAPCORE_CESIUM_ION === 'null' ? null : env.MAPCORE_CESIUM_ION;
     }
-    if (env.MAPCORE_TERRAIN_URL) this.config.terrainServiceUrl = env.MAPCORE_TERRAIN_URL;
   }
 
   /**
@@ -268,7 +252,6 @@ export class DeployConfigManager {
       this.config.cesiumIonServer =
         env.VITE_MAPCORE_CESIUM_ION === 'null' ? null : env.VITE_MAPCORE_CESIUM_ION;
     }
-    if (env.VITE_MAPCORE_TERRAIN_URL) this.config.terrainServiceUrl = env.VITE_MAPCORE_TERRAIN_URL;
   }
 
   /**
@@ -278,7 +261,6 @@ export class DeployConfigManager {
     return {
       tileServiceBase: config.tileServiceBase,
       cesiumIonServer: config.cesiumIonServer,
-      terrainServiceUrl: config.terrainServiceUrl,
       cesiumBaseUrl: config.cesiumBaseUrl,
       envMap: config.envMap,
     };

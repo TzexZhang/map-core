@@ -26,9 +26,6 @@ export enum LayerType {
   Cluster = 'cluster',
   /** Cesium 3D Tiles 图层（三维模型瓦片，如建筑、地形） */
   Tileset3D = 'tileset3d',
-  /** 地形服务图层（DEM 高程数据，仅 Cesium 3D） */
-  Terrain = 'terrain',
-  /** CZML 动态数据图层（Cesium 专用的时序动态数据格式） */
   CZML = 'czml',
   /** 自定义图层（业务通过插件扩展的特殊图层类型） */
   Custom = 'custom',
@@ -215,21 +212,6 @@ export interface Tileset3DLayerConfig extends LayerBaseConfig {
 }
 
 /**
- * 地形图层配置（Cesium 专属）
- * @description 用于配置 Cesium 的地形提供者，加载 DEM 高程数据。
- */
-export interface TerrainLayerConfig extends LayerBaseConfig {
-  /** 图层类型固定为 Terrain */
-  type: LayerType.Terrain;
-  /** 地形数据服务 URL */
-  url: string;
-  /** 是否请求顶点法线（用于更精确的光照效果），默认 false */
-  requestVertexNormals?: boolean;
-  /** 是否请求水面遮罩，默认 false */
-  requestWaterMask?: boolean;
-}
-
-/**
  * CZML 图层配置（Cesium 专属）
  * @description 用于加载 CZML（Cesium Language）格式的动态时序数据，
  *              常用于轨迹回放、卫星轨道、实时目标追踪等场景。
@@ -273,7 +255,6 @@ export type LayerConfig =
   | WMTSLayerConfig
   | HeatmapLayerConfig
   | Tileset3DLayerConfig
-  | TerrainLayerConfig
   | CZMLLayerConfig
   | CustomLayerConfig;
 

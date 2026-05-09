@@ -72,7 +72,6 @@ interface CesiumViewer {
     contains(dataSource: unknown): boolean;
     length: number;
   };
-  terrainProvider: unknown;
   destroy(): void;
   entities: { removeAll(): void };
   screenSpaceEventHandler: {
@@ -96,9 +95,6 @@ interface CesiumModule {
   UrlTemplateImageryProvider: new (options: Record<string, unknown>) => unknown;
   WebMapServiceImageryProvider: new (options: Record<string, unknown>) => unknown;
   WebMapTileServiceImageryProvider: new (options: Record<string, unknown>) => unknown;
-  CesiumTerrainProvider: {
-    fromUrl(url: string, options?: Record<string, unknown>): Promise<unknown>;
-  };
   Cartesian2: new (x: number, y: number) => unknown;
   Cartesian3: new (x: number, y: number, z: number) => unknown;
   Cartographic: {
@@ -124,7 +120,7 @@ interface CesiumModule {
  */
 interface CesiumLayerWrapper {
   /** 图层类型 */
-  type: 'imagery' | 'datasource' | 'primitive' | 'terrain';
+  type: 'imagery' | 'datasource' | 'primitive';
   /** Cesium 原生图层对象 */
   nativeLayer: unknown;
   /** 是否可见 */
@@ -454,9 +450,6 @@ export class CesiumMapEngine implements IMapEngine {
       case LayerType.Tileset3D:
         wrapper = this.add3DTilesetLayer(config);
         break;
-      case LayerType.Terrain:
-        void this.setTerrain(config);
-        return;
       case LayerType.CZML:
         wrapper = this.addCZMLLayer(config);
         break;
@@ -760,15 +753,6 @@ export class CesiumMapEngine implements IMapEngine {
 
   /**
    * 设置地形提供者
-   */
-  private async setTerrain(config: LayerConfig): Promise<void> {
-    const terrainConfig = config as { url: string };
-    const terrain = await this.cesium!.CesiumTerrainProvider.fromUrl(terrainConfig.url);
-    this.viewer!.terrainProvider = terrain;
-  }
-
-  /**
-   * 添加 CZML 数据源图层
    */
   private addCZMLLayer(config: LayerConfig): CesiumLayerWrapper {
     const czmlConfig = config as { url?: string; data?: unknown[] };

@@ -94,9 +94,17 @@ function parseRgba(rgba) {
  */
 function namedColorToRgba(name) {
     const namedColors = {
-        red: '#ff0000', green: '#008000', blue: '#0000ff', white: '#ffffff',
-        black: '#000000', yellow: '#ffff00', orange: '#ffa500', purple: '#800080',
-        gray: '#808080', grey: '#808080', transparent: '#00000000',
+        red: '#ff0000',
+        green: '#008000',
+        blue: '#0000ff',
+        white: '#ffffff',
+        black: '#000000',
+        yellow: '#ffff00',
+        orange: '#ffa500',
+        purple: '#800080',
+        gray: '#808080',
+        grey: '#808080',
+        transparent: '#00000000',
     };
     const hex = namedColors[name] ?? '#000000';
     return parseHex(hex);

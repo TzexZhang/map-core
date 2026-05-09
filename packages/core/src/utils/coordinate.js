@@ -31,7 +31,7 @@ const MAX_MERCATOR = 20037508.342789244;
  */
 export function lngLatToMercator(lngLat) {
     const [lng, lat] = lngLat;
-    const x = (lng * Math.PI) / 180 * EARTH_RADIUS;
+    const x = ((lng * Math.PI) / 180) * EARTH_RADIUS;
     const y = Math.log(Math.tan(((90 + lat) * Math.PI) / 360)) * EARTH_RADIUS;
     return [x, y];
 }

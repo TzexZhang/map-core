@@ -106,7 +106,7 @@ export interface IMapEngine {
    * - Tile/WMS/WMTS → 栅格瓦片图层
    * - Vector → 矢量要素图层
    * - Heatmap → 热力图图层
-   * - Tileset3D/Terrain/CZML → Cesium 三维图层
+   * - Tileset3D/CZML → Cesium 三维图层
    *
    * @param config - 图层配置（根据类型传入对应的配置接口）
    */

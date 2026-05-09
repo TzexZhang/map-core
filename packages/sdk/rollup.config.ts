@@ -1,5 +1,19 @@
 import typescript from '@rollup/plugin-typescript';
+import alias from '@rollup/plugin-alias';
 import { defineConfig } from 'rollup';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const sdkRoot = dirname(fileURLToPath(import.meta.url));
+const pkg = resolve(sdkRoot, '..');
+
+const subpackageAliases = [
+  { find: '@mapcore/core', replacement: resolve(pkg, 'core/src/index.ts') },
+  { find: '@mapcore/adapter-ol', replacement: resolve(pkg, 'adapter-ol/src/index.ts') },
+  { find: '@mapcore/adapter-cesium', replacement: resolve(pkg, 'adapter-cesium/src/index.ts') },
+  { find: '@mapcore/datasource', replacement: resolve(pkg, 'datasource/src/index.ts') },
+  { find: '@mapcore/bridge', replacement: resolve(pkg, 'bridge/src/index.ts') },
+];
 
 export default defineConfig([
   {
@@ -18,33 +32,38 @@ export default defineConfig([
         globals: {
           ol: 'ol',
           cesium: 'Cesium',
-          '@mapcore/core': 'MapCoreCore',
-          '@mapcore/adapter-ol': 'MapCoreAdapterOL',
-          '@mapcore/adapter-cesium': 'MapCoreAdapterCesium',
-          '@mapcore/datasource': 'MapCoreDatasource',
-          '@mapcore/bridge': 'MapCoreBridge',
         },
       },
     ],
-    external: [
-      'ol',
-      'cesium',
-      'ol/geom',
-      'ol/format',
-      'ol/source',
-      'ol/layer',
-      '@mapcore/core',
-      '@mapcore/adapter-ol',
-      '@mapcore/adapter-cesium',
-      '@mapcore/datasource',
-      '@mapcore/bridge',
-    ],
+    external(id) {
+      if (id === 'ol' || id === 'cesium') return true;
+      if (id.startsWith('ol/') || id.startsWith('cesium/')) return true;
+      return false;
+    },
     plugins: [
+      alias({ entries: subpackageAliases }),
       typescript({
-        tsconfig: './tsconfig.json',
+        tsconfig: './tsconfig.bundle.json',
         declarationDir: undefined,
         declaration: undefined,
         emitDeclarationOnly: false,
+      }),
+    ],
+  },
+  {
+    input: 'src/vite-plugin.ts',
+    output: {
+      file: 'dist/vite-plugin.js',
+      format: 'esm',
+      sourcemap: true,
+    },
+    external(id) {
+      if (id === 'vite' || id === 'path' || id === 'fs') return true;
+      return false;
+    },
+    plugins: [
+      typescript({
+        tsconfig: './tsconfig.vite-plugin.json',
       }),
     ],
   },

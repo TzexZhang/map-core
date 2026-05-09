@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "../..",
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "noEmit": false
+  },
+  "include": [
+    "src/**/*.ts",
+    "../core/src/**/*.ts",
+    "../adapter-ol/src/**/*.ts",
+    "../adapter-cesium/src/**/*.ts",
+    "../datasource/src/**/*.ts",
+    "../bridge/src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.d.ts",
+    "**/*.js",
+    "src/webcomponent.ts",
+    "src/vite-plugin.ts"
+  ]
+}

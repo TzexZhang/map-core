@@ -143,7 +143,7 @@ export function mergeBBoxes(bboxes) {
 export function extractCoordinates(features) {
     const coords = [];
     for (const feature of features) {
-        if (!feature.geometry || !feature.geometry.coordinates)
+        if (!feature.geometry?.coordinates)
             continue;
         const geom = feature.geometry;
         switch (geom.type) {

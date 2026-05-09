@@ -24,12 +24,7 @@ export declare function assertNonEmptyString(value: unknown, paramName: string):
  * @param max - 最大值（包含）
  * @throws 当值不是有限数字或超出范围时抛出 Error
  */
-export declare function assertNumberInRange(
-  value: unknown,
-  paramName: string,
-  min?: number,
-  max?: number
-): void;
+export declare function assertNumberInRange(value: unknown, paramName: string, min?: number, max?: number): void;
 /**
  * 校验对象非 null/undefined
  * @description 检查给定值是否为有效对象（非 null 且非 undefined）。
@@ -48,11 +43,7 @@ export declare function assertDefined(value: unknown, paramName: string): void;
  * @param resourceType - 资源类型名称（用于错误消息）
  * @throws 当 ID 已存在时抛出 Error
  */
-export declare function assertUniqueId(
-  id: string,
-  existingIds: Set<string>,
-  resourceType: string
-): void;
+export declare function assertUniqueId(id: string, existingIds: Set<string>, resourceType: string): void;
 /**
  * 校验经纬度坐标有效性
  * @description 检查经纬度元组是否在有效范围内。
@@ -80,9 +71,5 @@ export declare function resolveContainer(container: HTMLElement | string): HTMLE
  * @param paramName - 参数名称
  * @throws 当值不是枚举成员时抛出 Error
  */
-export declare function assertEnumValue(
-  value: unknown,
-  enumObj: Record<string, string>,
-  paramName: string
-): void;
+export declare function assertEnumValue(value: unknown, enumObj: Record<string, string>, paramName: string): void;
 //# sourceMappingURL=validator.d.ts.map
