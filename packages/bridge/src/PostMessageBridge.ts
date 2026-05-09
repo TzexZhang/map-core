@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file PostMessage 通信桥实现
  * @description 基于 window.postMessage API 的跨端通信桥。
  *              适用于 iframe 嵌入、WebView（含 opener）等场景。
@@ -6,8 +6,8 @@
  * @module MapCore.Bridge.PostMessage
  */
 
-import type { IBridge, BridgeMessage, PromiseResolver } from '@mapcore/core';
-import { Logger } from '@mapcore/core';
+import type { IBridge, BridgeMessage, PromiseResolver } from '@geomapcore/core';
+import { Logger } from '@geomapcore/core';
 
 /**
  * PostMessage 通信桥

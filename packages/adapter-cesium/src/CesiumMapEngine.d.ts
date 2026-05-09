@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file Cesium 3D 引擎适配器实现
  * @description 将 IMapEngine 接口映射到 Cesium Viewer API。
  *              实现三维地球的初始化、相机控制、坐标转换、图层管理和要素查询等能力。
@@ -15,7 +15,7 @@
  *
  * @module MapCore.Adapter.Cesium
  */
-import type { IMapEngine, LngLat, PixelCoord, BoundingBox, ViewState, FlyToOptions, MapCoreOptions, QueryOptions, GeoJSONFeatureCollection, GeoJSONFeature, LayerConfig, EventBus } from '@mapcore/core';
+import type { IMapEngine, LngLat, PixelCoord, BoundingBox, ViewState, FlyToOptions, MapCoreOptions, QueryOptions, GeoJSONFeatureCollection, GeoJSONFeature, LayerConfig, EventBus } from '@geomapcore/core';
 /**
  * Cesium 3D 引擎适配器
  * @description 实现 IMapEngine 接口，将所有操作映射到 Cesium Viewer API。

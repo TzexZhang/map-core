@@ -1,5 +1,5 @@
 {
-  "name": "@mapcore/datasource",
+  "name": "@geomapcore/datasource",
   "version": "1.0.0",
   "description": "MapCore 数据源管理包 - HTTP/WebSocket/Mock 数据源统一管理",
   "main": "dist/index.js",
@@ -10,10 +10,14 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@mapcore/core": "workspace:*"
+    "@geomapcore/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file 数据源管理器实现
  * @description 统一管理所有数据源的注册、注销、数据获取、中间件执行和 Mock 注入。
  *              是 SDK 数据流的核心枢纽，协调数据源与图层之间的数据传递。
@@ -15,9 +15,9 @@ import type {
   GeoJSONFeatureCollection,
   GeoJSONFeature,
   DataSourceGlobalConfig,
-} from '@mapcore/core';
-import { DataSourceType, MapError, MapErrorCode, Logger } from '@mapcore/core';
-import type { EventBus } from '@mapcore/core';
+} from '@geomapcore/core';
+import { DataSourceType, MapError, MapErrorCode, Logger } from '@geomapcore/core';
+import type { EventBus } from '@geomapcore/core';
 import { HttpSource } from './sources/HttpSource';
 import { WebSocketSource } from './sources/WebSocketSource';
 import { StaticSource } from './sources/StaticSource';

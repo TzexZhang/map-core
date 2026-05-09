@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file OpenLayers 2D 引擎适配器实现
  * @description 将 IMapEngine 接口映射到 OpenLayers 具体 API。
  *              实现地图初始化、视图控制、坐标转换、图层管理和要素查询等核心能力。
@@ -10,7 +10,7 @@
  *
  * @module MapCore.Adapter.OL
  */
-import type { IMapEngine, LngLat, PixelCoord, BoundingBox, ViewState, FlyToOptions, MapCoreOptions, QueryOptions, GeoJSONFeatureCollection, GeoJSONFeature, LayerConfig, EventBus } from '@mapcore/core';
+import type { IMapEngine, LngLat, PixelCoord, BoundingBox, ViewState, FlyToOptions, MapCoreOptions, QueryOptions, GeoJSONFeatureCollection, GeoJSONFeature, LayerConfig, EventBus } from '@geomapcore/core';
 /**
  * OpenLayers 2D 引擎适配器
  * @description 实现 IMapEngine 接口，将所有操作映射到 OpenLayers API。

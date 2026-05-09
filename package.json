@@ -11,7 +11,9 @@
     "build": "turbo run build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "publish:sdk": "node scripts/publish.mjs",
+    "publish:sdk:dry": "node scripts/publish.mjs 1.0.0 --dry-run"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.0.0",

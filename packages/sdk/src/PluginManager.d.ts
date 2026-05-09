@@ -1,10 +1,10 @@
-/**
+﻿/**
  * @file 插件管理器实现
  * @description 管理插件的注册、依赖解析、安装和卸载生命周期。
  *              插件通过 IPlugin 接口定义统一的生命周期钩子。
  * @module MapCore.SDK.PluginManager
  */
-import type { IPlugin, PluginContext } from '@mapcore/core';
+import type { IPlugin, PluginContext } from '@geomapcore/core';
 /**
  * 插件管理器
  * @description 负责 SDK 插件的完整生命周期管理。

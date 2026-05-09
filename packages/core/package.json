@@ -1,5 +1,5 @@
 {
-  "name": "@mapcore/core",
+  "name": "@geomapcore/core",
   "version": "1.0.0",
   "description": "MapCore 核心包 - 纯接口与类型定义，零外部依赖",
   "main": "dist/index.js",
@@ -12,5 +12,9 @@
   "devDependencies": {
     "typescript": "^5.3.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  }
 }

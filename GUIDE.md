@@ -1,6 +1,6 @@
-# MapCore SDK 使用指南
+﻿# MapCore SDK 使用指南
 
-> **目标读者**：使用 `@mapcore/sdk` 的前端/移动端/桌面端开发者
+> **目标读者**：使用 `@geomapcore/sdk` 的前端/移动端/桌面端开发者
 > **文档用途**：安装、初始化、各平台集成、API 调用参考
 
 ***
@@ -44,7 +44,7 @@
 
 | 包              | 说明                                               | 安装   |
 | -------------- | ------------------------------------------------ | ---- |
-| `@mapcore/sdk` | SDK 聚合入口，包含 MapController、全部公共类型/枚举/工具函数、Vite 插件 | 始终安装 |
+| `@geomapcore/sdk` | SDK 聚合入口，包含 MapController、全部公共类型/枚举/工具函数、Vite 插件 | 始终安装 |
 
 ### 引擎依赖（按需安装）
 
@@ -57,29 +57,29 @@
 
 ### 可选子包（直接引用）
 
-以下子包已通过 `@mapcore/sdk` 聚合导出公共 API，大多数场景不需要单独引用。仅在需要 SDK 未导出的内容时单独安装：
+以下子包已通过 `@geomapcore/sdk` 聚合导出公共 API，大多数场景不需要单独引用。仅在需要 SDK 未导出的内容时单独安装：
 
 | 包                 | 说明                                | 单独引用场景                                                  |
 | ----------------- | --------------------------------- | ------------------------------------------------------- |
-| `@mapcore/core`   | 类型、接口、事件、工具函数（零依赖）                | 需要 `IDataSource`/`IDataSourceManager` 等未聚合导出的接口时        |
-| `@mapcore/bridge` | 跨端通信桥（Qt/Android/iOS/PostMessage） | 已通过 SDK 导出 `BridgeFactory`/`BridgeEnvironment`，通常无需单独引用 |
+| `@geomapcore/core`   | 类型、接口、事件、工具函数（零依赖）                | 需要 `IDataSource`/`IDataSourceManager` 等未聚合导出的接口时        |
+| `@geomapcore/bridge` | 跨端通信桥（Qt/Android/iOS/PostMessage） | 已通过 SDK 导出 `BridgeFactory`/`BridgeEnvironment`，通常无需单独引用 |
 
-> **不建议直接引用**的包：`@mapcore/adapter-ol`、`@mapcore/adapter-cesium`、`@mapcore/datasource`。这三个是 SDK 内部实现，由 `MapController` 内部创建和管理，外部不应直接实例化。
+> **不建议直接引用**的包：`@geomapcore/adapter-ol`、`@geomapcore/adapter-cesium`、`@geomapcore/datasource`。这三个是 SDK 内部实现，由 `MapController` 内部创建和管理，外部不应直接实例化。
 
 ### 安装命令
 
 ```bash
 # 2D 地图（OpenLayers）
-npm install @mapcore/sdk ol
+npm install @geomapcore/sdk ol
 
 # 3D 地球（Cesium）
-npm install @mapcore/sdk cesium
+npm install @geomapcore/sdk cesium
 
 # 2D + 3D 同时使用
-npm install @mapcore/sdk ol cesium
+npm install @geomapcore/sdk ol cesium
 
 # 需要直接使用 core 包中未聚合导出的接口时，额外安装
-npm install @mapcore/core
+npm install @geomapcore/core
 ```
 
 ### Vite 项目配置
@@ -87,7 +87,7 @@ npm install @mapcore/core
 安装后，在 `vite.config.ts` 中使用 `mapEngineSetup()` 插件（自动处理 Cesium 静态资源）：
 
 ```typescript
-import { mapEngineSetup } from '@mapcore/sdk/vite';
+import { mapEngineSetup } from '@geomapcore/sdk/vite';
 
 export default defineConfig({
   plugins: [vue(), mapEngineSetup()],
@@ -107,7 +107,7 @@ export default defineConfig({
 ```vue
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { MapController, EngineType, LayerType } from '@mapcore/sdk';
+import { MapController, EngineType, LayerType } from '@geomapcore/sdk';
 
 const mapContainer = ref<HTMLDivElement>();
 let map: MapController | null = null;
@@ -134,7 +134,7 @@ onBeforeUnmount(() => map?.destroy());
 
 ```tsx
 import { useEffect, useRef } from 'react';
-import { MapController, EngineType } from '@mapcore/sdk';
+import { MapController, EngineType } from '@geomapcore/sdk';
 
 function MapView() {
   const ref = useRef<HTMLDivElement>(null);
@@ -224,7 +224,7 @@ webView->page()->setWebChannel(channel);
 **步骤 4：前端通过 Bridge 通信**
 
 ```typescript
-import { BridgeFactory } from '@mapcore/sdk';
+import { BridgeFactory } from '@geomapcore/sdk';
 
 const bridge = BridgeFactory.detect();  // 自动检测 Qt 环境
 await bridge.send('mapReady', { engine: 'openlayers' });
@@ -362,7 +362,7 @@ set QTWEBENGINE_REMOTE_DEBUGGING=9222
 #### Android
 
 ```typescript
-import { MapController, EngineType, BridgeFactory } from '@mapcore/sdk';
+import { MapController, EngineType, BridgeFactory } from '@geomapcore/sdk';
 
 const map = await MapController.create({ container: 'map', engine: EngineType.OpenLayers });
 const bridge = BridgeFactory.detect();
@@ -405,7 +405,7 @@ webView.configuration.userContentController.add(scriptHandler, name: "mapBridge"
 <body>
   <div id="map"></div>
   <script type="module">
-    import { MapController, EngineType } from 'https://cdn.jsdelivr.net/npm/@mapcore/sdk/dist/mapcore.esm.js';
+    import { MapController, EngineType } from 'https://cdn.jsdelivr.net/npm/@geomapcore/sdk/dist/mapcore.esm.js';
 
     const map = await MapController.create({
       container: 'map',
@@ -431,7 +431,7 @@ webView.configuration.userContentController.add(scriptHandler, name: "mapBridge"
 ```typescript
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { mapEngineSetup } from '@mapcore/sdk/vite';
+import { mapEngineSetup } from '@geomapcore/sdk/vite';
 
 export default defineConfig({
   plugins: [vue(), mapEngineSetup()],
@@ -445,7 +445,7 @@ export default defineConfig({
 ```vue
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { MapController, EngineType, LayerType } from '@mapcore/sdk';
+import { MapController, EngineType, LayerType } from '@geomapcore/sdk';
 
 const mapContainer = ref<HTMLDivElement>();
 let map: MapController | null = null;
@@ -475,7 +475,7 @@ onBeforeUnmount(() => map?.destroy());
 
 ```tsx
 import { useEffect, useRef } from 'react';
-import { MapController, EngineType } from '@mapcore/sdk';
+import { MapController, EngineType } from '@geomapcore/sdk';
 
 function GlobeView() {
   const ref = useRef<HTMLDivElement>(null);
@@ -558,7 +558,7 @@ function GlobeView() {
 <body>
   <div id="map"></div>
   <script type="module">
-    import { MapController, EngineType } from 'https://cdn.jsdelivr.net/npm/@mapcore/sdk/dist/mapcore.esm.js';
+    import { MapController, EngineType } from 'https://cdn.jsdelivr.net/npm/@geomapcore/sdk/dist/mapcore.esm.js';
 
     const map = await MapController.create({
       container: 'map',
@@ -866,7 +866,7 @@ map.updateLayerData('targets', data);
 ### 方式二：自定义数据源（支持定时刷新）
 
 ```typescript
-import type { ICustomDataSource } from '@mapcore/sdk';
+import type { ICustomDataSource } from '@geomapcore/sdk';
 
 const source: ICustomDataSource = {
   id: 'my-targets',
@@ -892,8 +892,8 @@ map.on('datasource:update', (payload) => {
 ## 九、插件系统
 
 ```typescript
-import type { IPlugin, PluginContext } from '@mapcore/sdk';
-import { distance } from '@mapcore/sdk';
+import type { IPlugin, PluginContext } from '@geomapcore/sdk';
+import { distance } from '@geomapcore/sdk';
 
 const measurePlugin: IPlugin = {
   name: 'MeasureTool',
@@ -931,7 +931,7 @@ map.unuse('MeasureTool');
 ## 十、跨端通信桥
 
 ```typescript
-import { BridgeFactory } from '@mapcore/sdk';
+import { BridgeFactory } from '@geomapcore/sdk';
 
 const bridge = BridgeFactory.detect();
 await bridge.send('mapReady', { engine: 'openlayers' });
@@ -952,7 +952,7 @@ bridge.destroy();
 ## 十一、工具函数
 
 ```typescript
-import { isValidLngLat, distance, bearing, parseColor, withAlpha, Logger, LogLevel } from '@mapcore/sdk';
+import { isValidLngLat, distance, bearing, parseColor, withAlpha, Logger, LogLevel } from '@geomapcore/sdk';
 
 isValidLngLat([116.397, 39.909]);                          // true
 const dist = distance([116.397, 39.909], [121.473, 31.23]); // 米
@@ -966,12 +966,12 @@ const logger = new Logger('MyModule', LogLevel.DEBUG);
 
 ## 十二、Vite 插件选项
 
-`mapEngineSetup()` 是 SDK 提供的 Vite 构建插件，从 `@mapcore/sdk/vite` 子路径导入，自动处理地图引擎所需的构建时配置。
+`mapEngineSetup()` 是 SDK 提供的 Vite 构建插件，从 `@geomapcore/sdk/vite` 子路径导入，自动处理地图引擎所需的构建时配置。
 
 ### 导入方式
 
 ```typescript
-import { mapEngineSetup } from '@mapcore/sdk/vite';
+import { mapEngineSetup } from '@geomapcore/sdk/vite';
 ```
 
 ### 选项
@@ -1001,7 +1001,7 @@ mapEngineSetup({
 ```typescript
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { mapEngineSetup } from '@mapcore/sdk/vite';
+import { mapEngineSetup } from '@geomapcore/sdk/vite';
 
 export default defineConfig({
   plugins: [vue(), mapEngineSetup()],

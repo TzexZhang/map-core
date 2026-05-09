@@ -1,10 +1,10 @@
-/**
+﻿/**
  * @file 重试中间件
  * @description 在数据请求失败时自动重试，采用指数退避策略避免瞬间大量重试。
  * @module MapCore.DataSource.Middleware.Retry
  */
 
-import type { DataSourceMiddleware, DataSourceConfig } from '@mapcore/core';
+import type { DataSourceMiddleware, DataSourceConfig } from '@geomapcore/core';
 
 /**
  * 重试中间件配置

@@ -1,12 +1,12 @@
-/**
+﻿/**
  * @file 本地静态数据源实现
  * @description 直接使用传入的 GeoJSON 数据，无需网络请求。
  *              适用于离线数据、预加载的固定数据等场景。
  * @module MapCore.DataSource.StaticSource
  */
 
-import type { StaticSourceConfig, GeoJSONFeatureCollection, GeoJSONFeature } from '@mapcore/core';
-import { DataSourceType } from '@mapcore/core';
+import type { StaticSourceConfig, GeoJSONFeatureCollection, GeoJSONFeature } from '@geomapcore/core';
+import { DataSourceType } from '@geomapcore/core';
 
 /**
  * 静态数据源

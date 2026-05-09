@@ -1,5 +1,5 @@
-/**
- * @file @mapcore/core 包统一导出入口
+﻿/**
+ * @file @geomapcore/core 包统一导出入口
  * @description 核心包是整个 MapCore SDK 的基础，包含：
  *   - 全局类型定义（types/）
  *   - 核心接口定义（interfaces/）
@@ -8,7 +8,7 @@
  *   - 统一错误类（errors/）
  *
  * 此包零外部依赖，可独立使用。
- * @module @mapcore/core
+ * @module @geomapcore/core
  */
 
 // ==================== 类型导出 ====================

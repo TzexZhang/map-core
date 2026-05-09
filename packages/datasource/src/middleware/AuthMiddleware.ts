@@ -1,11 +1,11 @@
-/**
+﻿/**
  * @file 鉴权中间件
  * @description 在数据请求中自动注入鉴权 Token 或签名信息。
  *              支持从配置或回调函数获取 Token，每次请求自动附加到请求头。
  * @module MapCore.DataSource.Middleware.Auth
  */
 
-import type { DataSourceMiddleware, DataSourceConfig } from '@mapcore/core';
+import type { DataSourceMiddleware, DataSourceConfig } from '@geomapcore/core';
 
 /**
  * 鉴权中间件配置

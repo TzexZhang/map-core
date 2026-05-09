@@ -1,7 +1,7 @@
-/**
- * @file @mapcore/datasource 包统一导出入口
+﻿/**
+ * @file @geomapcore/datasource 包统一导出入口
  * @description 数据源管理包。提供 DataSourceManager 和各类数据源实现。
- * @module @mapcore/datasource
+ * @module @geomapcore/datasource
  */
 
 export { DataSourceManager } from './DataSourceManager';

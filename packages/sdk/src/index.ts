@@ -1,5 +1,5 @@
-/**
- * @file @mapcore/sdk 包统一导出入口
+﻿/**
+ * @file @geomapcore/sdk 包统一导出入口
  * @description MapCore SDK 聚合包，对外暴露所有公共 API。
  *
  * 架构边界说明：
@@ -8,14 +8,14 @@
  * - 内部 HTTP/WebSocket 仅供 SDK 自身使用，不暴露给外部
  * - 外部数据交互通过 ICustomDataSource 接口或 updateLayerData() 方法
  *
- * @module @mapcore/sdk
+ * @module @geomapcore/sdk
  */
 
 // ==================== 核心 SDK 类 ====================
 export { MapController } from './MapController';
 
 // ==================== 核心枚举 ====================
-export { EngineType, LayerType, MapEvents, EventBus, EventTypes } from '@mapcore/core';
+export { EngineType, LayerType, MapEvents, EventBus, EventTypes } from '@geomapcore/core';
 
 // ==================== 核心类型导出（外部 API 用到的） ====================
 export type {
@@ -51,10 +51,10 @@ export type {
   FeatureClickPayload,
   DataSourceUpdatePayload,
   EventHandler,
-} from '@mapcore/core';
+} from '@geomapcore/core';
 
 // ==================== 错误类 ====================
-export { MapError, MapErrorCode } from '@mapcore/core';
+export { MapError, MapErrorCode } from '@geomapcore/core';
 
 // ==================== 工具函数 ====================
 export {
@@ -65,7 +65,7 @@ export {
   bearing,
   parseColor,
   withAlpha,
-} from '@mapcore/core';
+} from '@geomapcore/core';
 
 // ==================== 跨端通信桥（外部可选使用） ====================
-export { BridgeFactory, BridgeEnvironment } from '@mapcore/bridge';
+export { BridgeFactory, BridgeEnvironment } from '@geomapcore/bridge';

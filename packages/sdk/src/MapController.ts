@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file MapController 主控制器实现
  * @description SDK 的核心入口类，是业务方与 SDK 交互的唯一接口。
  *              提供基础地图能力（渲染、图层、视图、事件、插件），
@@ -28,7 +28,7 @@ import type {
   EventHandler,
   ICustomDataSource,
   BasemapConfig,
-} from '@mapcore/core';
+} from '@geomapcore/core';
 import {
   EngineType,
   LayerType,
@@ -38,9 +38,9 @@ import {
   MapErrorCode,
   resolveContainer,
   deployConfig,
-} from '@mapcore/core';
-import { OLMapEngine } from '@mapcore/adapter-ol';
-import { CesiumMapEngine } from '@mapcore/adapter-cesium';
+} from '@geomapcore/core';
+import { OLMapEngine } from '@geomapcore/adapter-ol';
+import { CesiumMapEngine } from '@geomapcore/adapter-cesium';
 import { PluginManager } from './PluginManager';
 
 /**

@@ -1,5 +1,5 @@
 {
-  "name": "@mapcore/adapter-cesium",
+  "name": "@geomapcore/adapter-cesium",
   "version": "1.0.0",
   "description": "MapCore Cesium 适配器 - 三维地球引擎实现",
   "main": "dist/index.js",
@@ -10,7 +10,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@mapcore/core": "workspace:*"
+    "@geomapcore/core": "workspace:*"
   },
   "peerDependencies": {
     "cesium": "^1.120.0"
@@ -19,5 +19,9 @@
     "cesium": "^1.120.0",
     "typescript": "^5.3.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  }
 }

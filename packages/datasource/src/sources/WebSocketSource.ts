@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file WebSocket 数据源实现
  * @description 基于 WebSocket API 的长连接数据源，支持自动重连、
  *              心跳保活、消息解析和断线补偿。
@@ -18,8 +18,8 @@ import type {
   WebSocketSourceConfig,
   GeoJSONFeatureCollection,
   GeoJSONFeature,
-} from '@mapcore/core';
-import { DataSourceType, Logger } from '@mapcore/core';
+} from '@geomapcore/core';
+import { DataSourceType, Logger } from '@geomapcore/core';
 
 /**
  * WebSocket 数据源

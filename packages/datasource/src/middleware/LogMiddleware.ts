@@ -1,12 +1,12 @@
-/**
+﻿/**
  * @file 日志中间件
  * @description 在数据请求前后记录日志，便于调试和问题排查。
  *              记录请求 URL、耗时、响应状态等信息。
  * @module MapCore.DataSource.Middleware.Log
  */
 
-import type { DataSourceMiddleware, DataSourceConfig } from '@mapcore/core';
-import { Logger } from '@mapcore/core';
+import type { DataSourceMiddleware, DataSourceConfig } from '@geomapcore/core';
+import { Logger } from '@geomapcore/core';
 
 /**
  * 日志中间件

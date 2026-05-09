@@ -1,10 +1,10 @@
-/**
+﻿/**
  * @file 跨端通信桥工厂
  * @description 自动检测宿主环境，返回对应的 Bridge 实现。
  *              支持检测：Qt WebChannel / Android JSBridge / iOS WKWebView / iframe / 纯浏览器。
  * @module MapCore.Bridge.Factory
  */
-import type { IBridge } from '@mapcore/core';
+import type { IBridge } from '@geomapcore/core';
 /**
  * 宿主环境类型枚举
  */

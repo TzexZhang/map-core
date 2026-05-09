@@ -1,11 +1,11 @@
-/**
+﻿/**
  * @file 缓存中间件
  * @description 为 HTTP 数据请求提供内存缓存能力，避免短时间内重复请求相同数据。
  *              支持自定义缓存有效期（TTL），过期后自动失效。
  * @module MapCore.DataSource.Middleware.Cache
  */
 
-import type { DataSourceMiddleware, DataSourceConfig } from '@mapcore/core';
+import type { DataSourceMiddleware, DataSourceConfig } from '@geomapcore/core';
 
 /**
  * 缓存条目

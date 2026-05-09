@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file MapController 主控制器实现
  * @description SDK 的核心入口类，是业务方与 SDK 交互的唯一接口。
  *              提供基础地图能力（渲染、图层、视图、事件、插件），
@@ -13,8 +13,8 @@
  *
  * @module MapCore.SDK.MapController
  */
-import type { LayerConfig, LayerState, ViewState, FlyToOptions, BoundingBox, MapCoreOptions, GeoJSONFeatureCollection, IPlugin, EventHandler, ICustomDataSource } from '@mapcore/core';
-import { EventBus } from '@mapcore/core';
+import type { LayerConfig, LayerState, ViewState, FlyToOptions, BoundingBox, MapCoreOptions, GeoJSONFeatureCollection, IPlugin, EventHandler, ICustomDataSource } from '@geomapcore/core';
+import { EventBus } from '@geomapcore/core';
 /**
  * MapController 主控制器
  * @description SDK 的核心入口类，业务方通过此类使用所有地图基础能力。

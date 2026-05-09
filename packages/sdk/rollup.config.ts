@@ -1,4 +1,4 @@
-import typescript from '@rollup/plugin-typescript';
+﻿import typescript from '@rollup/plugin-typescript';
 import alias from '@rollup/plugin-alias';
 import { defineConfig } from 'rollup';
 import { resolve, dirname } from 'path';
@@ -8,11 +8,11 @@ const sdkRoot = dirname(fileURLToPath(import.meta.url));
 const pkg = resolve(sdkRoot, '..');
 
 const subpackageAliases = [
-  { find: '@mapcore/core', replacement: resolve(pkg, 'core/src/index.ts') },
-  { find: '@mapcore/adapter-ol', replacement: resolve(pkg, 'adapter-ol/src/index.ts') },
-  { find: '@mapcore/adapter-cesium', replacement: resolve(pkg, 'adapter-cesium/src/index.ts') },
-  { find: '@mapcore/datasource', replacement: resolve(pkg, 'datasource/src/index.ts') },
-  { find: '@mapcore/bridge', replacement: resolve(pkg, 'bridge/src/index.ts') },
+  { find: '@geomapcore/core', replacement: resolve(pkg, 'core/src/index.ts') },
+  { find: '@geomapcore/adapter-ol', replacement: resolve(pkg, 'adapter-ol/src/index.ts') },
+  { find: '@geomapcore/adapter-cesium', replacement: resolve(pkg, 'adapter-cesium/src/index.ts') },
+  { find: '@geomapcore/datasource', replacement: resolve(pkg, 'datasource/src/index.ts') },
+  { find: '@geomapcore/bridge', replacement: resolve(pkg, 'bridge/src/index.ts') },
 ];
 
 export default defineConfig([

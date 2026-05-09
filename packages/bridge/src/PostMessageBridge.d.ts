@@ -1,11 +1,11 @@
-/**
+﻿/**
  * @file PostMessage 通信桥实现
  * @description 基于 window.postMessage API 的跨端通信桥。
  *              适用于 iframe 嵌入、WebView（含 opener）等场景。
  *              通信协议采用 JSON-RPC 2.0 风格。
  * @module MapCore.Bridge.PostMessage
  */
-import type { IBridge } from '@mapcore/core';
+import type { IBridge } from '@geomapcore/core';
 /**
  * PostMessage 通信桥
  * @description 通过 window.postMessage 实现跨 iframe / 跨窗口通信。

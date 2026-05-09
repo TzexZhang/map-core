@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file OpenLayers 2D 引擎适配器实现
  * @description 将 IMapEngine 接口映射到 OpenLayers 具体 API。
  *              实现地图初始化、视图控制、坐标转换、图层管理和要素查询等核心能力。
@@ -25,14 +25,14 @@ import type {
   LayerConfig,
   EventBus,
   CoordinateSystem,
-} from '@mapcore/core';
+} from '@geomapcore/core';
 import {
   LayerType,
   MapError,
   MapErrorCode,
   lngLatToMercator,
   mercatorToLngLat,
-} from '@mapcore/core';
+} from '@geomapcore/core';
 
 /**
  * OpenLayers 库引用类型声明

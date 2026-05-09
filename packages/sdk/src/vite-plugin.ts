@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file Vite 构建插件 — 地图引擎静态资源自动配置
  * @description 为使用 MapCore SDK 的项目自动处理 Cesium / OpenLayers
  *              运行时所需的静态资源（Workers、Assets、Widgets 等），
@@ -7,13 +7,13 @@
  * 使用方式：
  * ```ts
  * // vite.config.ts
- * import { mapEngineSetup } from '@mapcore/sdk/vite'
+ * import { mapEngineSetup } from '@geomapcore/sdk/vite'
  * export default defineConfig({
  *   plugins: [vue(), mapEngineSetup()]
  * })
  * ```
  *
- * @module @mapcore/sdk/vite
+ * @module @geomapcore/sdk/vite
  */
 
 import { resolve, join, dirname } from 'path';

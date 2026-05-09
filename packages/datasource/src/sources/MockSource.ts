@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file Mock 模拟数据源实现
  * @description 用于开发/联调阶段的模拟数据源。
  *              支持静态数据、动态生成函数、模拟延迟和随机错误。
@@ -6,8 +6,8 @@
  * @module MapCore.DataSource.MockSource
  */
 
-import type { MockSourceConfig, GeoJSONFeatureCollection, GeoJSONFeature } from '@mapcore/core';
-import { DataSourceType, Logger } from '@mapcore/core';
+import type { MockSourceConfig, GeoJSONFeatureCollection, GeoJSONFeature } from '@geomapcore/core';
+import { DataSourceType, Logger } from '@geomapcore/core';
 
 /**
  * Mock 数据源

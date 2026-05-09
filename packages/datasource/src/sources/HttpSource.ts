@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file HTTP/HTTPS 数据源实现
  * @description 基于 fetch API 的 HTTP 数据源，支持单次请求、定时轮询、
  *              请求超时、请求/响应拦截等能力。
@@ -16,8 +16,8 @@ import type {
   GeoJSONFeatureCollection,
   GeoJSONFeature,
   DataSourceGlobalConfig,
-} from '@mapcore/core';
-import { DataSourceType, Logger } from '@mapcore/core';
+} from '@geomapcore/core';
+import { DataSourceType, Logger } from '@geomapcore/core';
 
 /**
  * HTTP 数据源

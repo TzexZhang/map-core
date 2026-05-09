@@ -1,5 +1,5 @@
 {
-  "name": "@mapcore/bridge",
+  "name": "@geomapcore/bridge",
   "version": "1.0.0",
   "description": "MapCore 多端通信桥接包 - Qt/Android/iOS/iframe 跨端通信",
   "main": "dist/index.js",
@@ -10,10 +10,14 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@mapcore/core": "workspace:*"
+    "@geomapcore/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  }
 }
